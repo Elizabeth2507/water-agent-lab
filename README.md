@@ -58,6 +58,25 @@ Run the default MVP simulation:
 uv run water-agent-lab simulate --config configs/drought_mvp.yaml
 ```
 
+Run the proportional baseline:
+
+```bash
+uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy proportional
+```
+
+Run the priority-weighted baseline:
+
+```
+uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy priority
+```
+
+Compare available strategies:
+
+```
+uv run water-agent-lab compare --config configs/drought_mvp.yaml
+```
+
+
 Show CLI help:
 
 ```bash
@@ -69,6 +88,8 @@ Show help for the simulation command:
 ```bash
 uv run water-agent-lab simulate --help
 ```
+
+
 
 ## Example scenario
 
