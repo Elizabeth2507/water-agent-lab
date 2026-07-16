@@ -1,0 +1,27 @@
+scenario_name: extreme_drought
+country: France
+region: Occitanie
+drought_level: extreme
+available_water: 60.0
+max_rounds: 5
+
+stakeholders:
+  - name: agriculture
+    requested_water: 50.0
+    minimum_acceptable_water: 35.0
+    priority: 0.8
+
+  - name: urban
+    requested_water: 35.0
+    minimum_acceptable_water: 28.0
+    priority: 0.9
+
+  - name: industry
+    requested_water: 25.0
+    minimum_acceptable_water: 15.0
+    priority: 0.5
+
+  - name: ecosystem
+    requested_water: 20.0
+    minimum_acceptable_water: 18.0
+    priority: 1.0
