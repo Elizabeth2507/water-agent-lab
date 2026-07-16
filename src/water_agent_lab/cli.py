@@ -113,6 +113,29 @@ def compare(
     console.print(table)
 
 
+@app.command("validate-config")
+def validate_config(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ],
+) -> None:
+    """
+    Validate a drought scenario configuration file.
+    """
+    scenario = load_scenario_config(config)
+
+    console.print("[green]Config is valid.[/green]")
+    console.print(f"Scenario: {scenario.scenario_name}")
+    console.print(f"Country: {scenario.country}")
+    console.print(f"Region: {scenario.region}")
+    console.print(f"Stakeholders: {len(scenario.stakeholders)}")
+
+
 @app.command("version")
 def version() -> None:
     """

@@ -89,3 +89,19 @@ def test_version_command() -> None:
 
     assert result.exit_code == 0
     assert "WaterAgentLab 0.1.0" in result.stdout
+
+
+def test_validate_config_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "validate-config",
+            "--config",
+            "configs/drought_mvp.yaml",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Config is valid." in result.stdout
+    assert "moderate_drought_mvp" in result.stdout
+    assert "Stakeholders: 4" in result.stdout
