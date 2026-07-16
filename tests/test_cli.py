@@ -141,3 +141,32 @@ def test_run_all_command_with_csv_output(tmp_path) -> None:
     assert result.exit_code == 0
     assert output_path.exists()
     assert "Saved results" in result.stdout
+
+
+def test_plot_results_command(tmp_path) -> None:
+    input_path = tmp_path / "results.csv"
+    output_path = tmp_path / "plot.png"
+
+    input_path.write_text(
+        (
+            "scenario_name,strategy,fairness_score,conflict_score\n"
+            "mild_drought,proportional,0.9,0.0\n"
+            "severe_drought,priority,0.6,0.5\n"
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "plot-results",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved plot" in result.stdout

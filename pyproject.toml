@@ -1,13 +1,15 @@
 [project]
 name = "water-agent-lab"
 version = "0.1.0"
-description = "Add your description here"
+description = "A simulation framework for water-resource allocation during drought."
 readme = "README.md"
 authors = [
     { name = "Elisabeth O", email = "elizabeth.olamisan@outlook.com" }
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "matplotlib>=3.11.0",
+    "pandas>=3.0.3",
     "pydantic>=2.13.4",
     "pyyaml>=6.0.3",
     "rich>=15.0.0",
@@ -15,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-water-agent-lab = "water_agent_lab:main"
+water-agent-lab = "water_agent_lab.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.11.28,<0.12.0"]

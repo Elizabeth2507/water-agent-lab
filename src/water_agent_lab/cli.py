@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from water_agent_lab.exporter import save_results_csv, save_results_json
+from water_agent_lab.plotter import plot_fairness_conflict
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, SimulationResult
@@ -226,6 +227,33 @@ def validate_config(
     console.print(f"Country: {scenario.country}")
     console.print(f"Region: {scenario.region}")
     console.print(f"Stakeholders: {len(scenario.stakeholders)}")
+
+
+@app.command("plot-results")
+def plot_results(
+    input_path: Annotated[
+        Path,
+        typer.Option(
+            "--input",
+            "-i",
+            help="Path to exported CSV results.",
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the output PNG plot.",
+        ),
+    ] = Path("outputs/fairness_conflict.png"),
+) -> None:
+    """
+    Plot fairness and conflict scores from exported simulation results.
+    """
+    plot_fairness_conflict(input_path=input_path, output_path=output)
+
+    console.print(f"[green]Saved plot to {output}[/green]")
 
 
 @app.command("version")
