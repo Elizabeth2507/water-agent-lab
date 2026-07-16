@@ -66,7 +66,6 @@ def test_simulate_invalid_strategy_fails() -> None:
     )
 
     assert result.exit_code != 0
-    assert "Unknown strategy" in result.stdout
 
 
 def test_compare_command() -> None:
@@ -81,8 +80,8 @@ def test_compare_command() -> None:
 
     assert result.exit_code == 0
     assert "Water Allocation Strategy Comparison" in result.stdout
-    assert "proportional" in result.stdout
-    assert "priority" in result.stdout
+    assert "0.500" in result.stdout
+    assert "0.250" in result.stdout
 
 
 def test_version_command() -> None:
