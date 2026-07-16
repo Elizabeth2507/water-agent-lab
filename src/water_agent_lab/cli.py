@@ -8,7 +8,7 @@ from rich.table import Table
 
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
-from water_agent_lab.models import SimulationResult
+from water_agent_lab.models import AllocationProposal, ScenarioConfig, SimulationResult
 from water_agent_lab.simulator import (
     priority_weighted_allocation,
     proportional_allocation,
@@ -18,7 +18,22 @@ app = typer.Typer(
     help="WaterAgentLab command-line interface.",
     no_args_is_help=True,
 )
-console = Console()
+console = Console(width=120)
+
+
+def create_proposal(strategy: str, scenario: ScenarioConfig) -> AllocationProposal:
+    """
+    Create an allocation proposal for one strategy.
+    """
+    if strategy == "proportional":
+        return proportional_allocation(scenario)
+
+    if strategy == "priority":
+        return priority_weighted_allocation(scenario)
+
+    raise typer.BadParameter(
+        "Unknown strategy. Choose either 'proportional' or 'priority'."
+    )
 
 
 def run_strategy(strategy: str, config_path: Path) -> SimulationResult:
@@ -26,15 +41,7 @@ def run_strategy(strategy: str, config_path: Path) -> SimulationResult:
     Run one allocation strategy and return the evaluated result.
     """
     scenario = load_scenario_config(config_path)
-
-    if strategy == "proportional":
-        proposal = proportional_allocation(scenario)
-    elif strategy == "priority":
-        proposal = priority_weighted_allocation(scenario)
-    else:
-        raise typer.BadParameter(
-            "Unknown strategy. Choose either 'proportional' or 'priority'."
-        )
+    proposal = create_proposal(strategy=strategy, scenario=scenario)
 
     return evaluate_proposal(scenario, proposal)
 
@@ -109,6 +116,57 @@ def compare(
             f"{result.conflict_score:.3f}",
             str(result.agreement_reached),
         )
+
+    console.print(table)
+
+
+@app.command("run-all")
+def run_all(
+    config_dir: Annotated[
+        Path,
+        typer.Option(
+            "--config-dir",
+            "-d",
+            help="Directory containing drought scenario YAML files.",
+        ),
+    ] = Path("configs"),
+) -> None:
+    """
+    Run all scenario configs with all available allocation strategies.
+    """
+    config_paths = sorted(config_dir.glob("*.yaml"))
+
+    if not config_paths:
+        raise typer.BadParameter(f"No YAML config files found in: {config_dir}")
+
+    strategies = ["proportional", "priority"]
+
+    table = Table(title="All Scenario Strategy Comparison")
+
+    table.add_column("Scenario")
+    table.add_column("Drought level")
+    table.add_column("Available water")
+    table.add_column("Strategy")
+    table.add_column("Fairness score")
+    table.add_column("Conflict score")
+    table.add_column("Agreement reached")
+
+    for config_path in config_paths:
+        scenario = load_scenario_config(config_path)
+
+        for strategy in strategies:
+            proposal = create_proposal(strategy=strategy, scenario=scenario)
+            result = evaluate_proposal(scenario, proposal)
+
+            table.add_row(
+                result.scenario_name,
+                result.drought_level,
+                f"{result.available_water:.2f}",
+                strategy,
+                f"{result.fairness_score:.3f}",
+                f"{result.conflict_score:.3f}",
+                str(result.agreement_reached),
+            )
 
     console.print(table)
 

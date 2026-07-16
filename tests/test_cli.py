@@ -105,3 +105,20 @@ def test_validate_config_command() -> None:
     assert "Config is valid." in result.stdout
     assert "moderate_drought_mvp" in result.stdout
     assert "Stakeholders: 4" in result.stdout
+
+
+def test_run_all_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "All Scenario Strategy Comparison" in result.stdout
+    assert "mild_drought" in result.stdout
+    assert "severe_drought" in result.stdout
+    assert "extreme_drought" in result.stdout

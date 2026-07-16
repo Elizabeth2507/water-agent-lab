@@ -76,6 +76,12 @@ Compare available strategies:
 uv run water-agent-lab compare --config configs/drought_mvp.yaml
 ```
 
+Run all scenarios and compare strategies:
+
+```bash
+uv run water-agent-lab run-all --config-dir configs
+```
+
 
 Show CLI help:
 
