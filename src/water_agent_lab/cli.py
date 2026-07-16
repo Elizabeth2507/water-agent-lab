@@ -6,6 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from water_agent_lab.exporter import save_results_csv, save_results_json
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, SimulationResult
@@ -130,6 +131,14 @@ def run_all(
             help="Directory containing drought scenario YAML files.",
         ),
     ] = Path("configs"),
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save results as .csv or .json.",
+        ),
+    ] = None,
 ) -> None:
     """
     Run all scenario configs with all available allocation strategies.
@@ -140,6 +149,7 @@ def run_all(
         raise typer.BadParameter(f"No YAML config files found in: {config_dir}")
 
     strategies = ["proportional", "priority"]
+    rows = []
 
     table = Table(title="All Scenario Strategy Comparison")
 
@@ -158,6 +168,20 @@ def run_all(
             proposal = create_proposal(strategy=strategy, scenario=scenario)
             result = evaluate_proposal(scenario, proposal)
 
+            row = {
+                "scenario_name": result.scenario_name,
+                "drought_level": result.drought_level,
+                "available_water": result.available_water,
+                "strategy": strategy,
+                "total_requested": result.total_requested,
+                "total_allocated": result.total_allocated,
+                "water_budget_valid": result.water_budget_valid,
+                "fairness_score": result.fairness_score,
+                "conflict_score": result.conflict_score,
+                "agreement_reached": result.agreement_reached,
+            }
+            rows.append(row)
+
             table.add_row(
                 result.scenario_name,
                 result.drought_level,
@@ -169,6 +193,16 @@ def run_all(
             )
 
     console.print(table)
+
+    if output is not None:
+        if output.suffix == ".csv":
+            save_results_csv(rows, output)
+        elif output.suffix == ".json":
+            save_results_json(rows, output)
+        else:
+            raise typer.BadParameter("Output file must end with .csv or .json.")
+
+        console.print(f"[green]Saved results to {output}[/green]")
 
 
 @app.command("validate-config")

@@ -122,3 +122,22 @@ def test_run_all_command() -> None:
     assert "mild_drought" in result.stdout
     assert "severe_drought" in result.stdout
     assert "extreme_drought" in result.stdout
+
+
+def test_run_all_command_with_csv_output(tmp_path) -> None:
+    output_path = tmp_path / "results.csv"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved results" in result.stdout
