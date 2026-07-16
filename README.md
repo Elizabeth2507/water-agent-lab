@@ -82,6 +82,19 @@ Run all scenarios and compare strategies:
 uv run water-agent-lab run-all --config-dir configs
 ```
 
+Export all scenario results:
+
+```bash
+uv run water-agent-lab run-all --config-dir configs --output outputs/results.csv
+```
+
+
+Plot fairness and conflict scores:
+
+```
+uv run water-agent-lab plot-results --input outputs/results.csv --output outputs/fairness_conflict.png
+```
+
 
 Show CLI help:
 
@@ -190,3 +203,10 @@ WaterAgentLab separates responsibilities across modules:
 - `cli.py` provides the command-line interface.
 
 This structure keeps the project easy to test, extend, and later connect to rule-based or LLM-powered agents.
+
+## Results
+
+A short explanation of the first scenario comparison is available in:
+
+```text
+docs/results.md
