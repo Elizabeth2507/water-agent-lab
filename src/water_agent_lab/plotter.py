@@ -3,6 +3,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from water_agent_lab.scenario_ordering import drought_level_sort_key
+
 
 def plot_fairness_conflict(input_path: str | Path, output_path: str | Path) -> None:
     """
@@ -14,8 +16,12 @@ def plot_fairness_conflict(input_path: str | Path, output_path: str | Path) -> N
 
     data = pd.read_csv(input_file)
 
+    data["drought_sort_key"] = data["drought_level"].apply(drought_level_sort_key)
+    data = data.sort_values(["drought_sort_key", "strategy"])
+
     required_columns = {
         "scenario_name",
+        "drought_level",
         "strategy",
         "fairness_score",
         "conflict_score",
@@ -50,7 +56,7 @@ def plot_fairness_conflict(input_path: str | Path, output_path: str | Path) -> N
     plt.xticks(x_positions, data["label"], rotation=45, ha="right")
     plt.ylim(0, 1)
     plt.ylabel("Score")
-    plt.title("Fairness and Conflict Across Drought Scenarios")
+    plt.title("Fairness and Conflict by Drought Severity")
     plt.legend()
     plt.tight_layout()
 

@@ -149,9 +149,9 @@ def test_plot_results_command(tmp_path) -> None:
 
     input_path.write_text(
         (
-            "scenario_name,strategy,fairness_score,conflict_score\n"
-            "mild_drought,proportional,0.9,0.0\n"
-            "severe_drought,priority,0.6,0.5\n"
+            "scenario_name,drought_level,strategy,fairness_score,conflict_score\n"
+            "mild_drought,mild,proportional,0.9,0.0\n"
+            "severe_drought,severe,priority,0.6,0.5\n"
         ),
         encoding="utf-8",
     )

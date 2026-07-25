@@ -6,6 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from water_agent_lab.scenario_ordering import drought_level_sort_key
 from water_agent_lab.exporter import save_results_csv, save_results_json
 from water_agent_lab.plotter import plot_fairness_conflict
 from water_agent_lab.config import load_scenario_config
@@ -146,6 +147,15 @@ def run_all(
     """
     config_paths = sorted(config_dir.glob("*.yaml"))
 
+    scenarios = [
+        (config_path, load_scenario_config(config_path)) for config_path in config_paths
+    ]
+
+    scenarios = sorted(
+        scenarios,
+        key=lambda item: drought_level_sort_key(item[1].drought_level),
+    )
+
     if not config_paths:
         raise typer.BadParameter(f"No YAML config files found in: {config_dir}")
 
@@ -162,9 +172,7 @@ def run_all(
     table.add_column("Conflict score")
     table.add_column("Agreement reached")
 
-    for config_path in config_paths:
-        scenario = load_scenario_config(config_path)
-
+    for _config_path, scenario in scenarios:
         for strategy in strategies:
             proposal = create_proposal(strategy=strategy, scenario=scenario)
             result = evaluate_proposal(scenario, proposal)

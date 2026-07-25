@@ -13,12 +13,14 @@ def test_plot_fairness_conflict(tmp_path: Path) -> None:
         [
             {
                 "scenario_name": "mild_drought",
+                "drought_level": "mild",
                 "strategy": "proportional",
                 "fairness_score": 0.9,
                 "conflict_score": 0.0,
             },
             {
                 "scenario_name": "severe_drought",
+                "drought_level": "severe",
                 "strategy": "priority",
                 "fairness_score": 0.6,
                 "conflict_score": 0.5,
