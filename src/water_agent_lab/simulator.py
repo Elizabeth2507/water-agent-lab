@@ -47,3 +47,53 @@ def priority_weighted_allocation(config: ScenarioConfig) -> AllocationProposal:
     }
 
     return AllocationProposal(allocations=allocations)
+
+
+def minimum_first_allocation(config: ScenarioConfig) -> AllocationProposal:
+    """
+    Allocate water by protecting minimum acceptable needs first.
+
+    Algorithm:
+    1. If available water is less than total minimum demand,
+       allocate proportionally to minimum acceptable water.
+    2. Otherwise, give each stakeholder its minimum acceptable water.
+    3. Distribute remaining water proportionally to remaining unmet demand.
+    """
+    total_minimum_required = sum(
+        stakeholder.minimum_acceptable_water for stakeholder in config.stakeholders
+    )
+
+    if config.available_water <= total_minimum_required:
+        allocations = {
+            stakeholder.name: (
+                config.available_water
+                * stakeholder.minimum_acceptable_water
+                / total_minimum_required
+            )
+            for stakeholder in config.stakeholders
+        }
+
+        return AllocationProposal(allocations=allocations)
+
+    allocations = {
+        stakeholder.name: stakeholder.minimum_acceptable_water
+        for stakeholder in config.stakeholders
+    }
+
+    remaining_water = config.available_water - total_minimum_required
+
+    total_unmet_demand = sum(
+        stakeholder.requested_water - stakeholder.minimum_acceptable_water
+        for stakeholder in config.stakeholders
+    )
+
+    for stakeholder in config.stakeholders:
+        unmet_demand = (
+            stakeholder.requested_water - stakeholder.minimum_acceptable_water
+        )
+
+        allocations[stakeholder.name] += (
+            remaining_water * unmet_demand / total_unmet_demand
+        )
+
+    return AllocationProposal(allocations=allocations)

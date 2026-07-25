@@ -8,7 +8,7 @@ from water_agent_lab.evaluator import (
     compute_total_requested,
     evaluate_proposal,
 )
-from water_agent_lab.simulator import proportional_allocation
+from water_agent_lab.simulator import minimum_first_allocation, proportional_allocation
 
 
 def test_compute_total_requested() -> None:
@@ -59,3 +59,14 @@ def test_evaluate_proposal_result() -> None:
     assert result.fairness_score == pytest.approx(100.0 / 130.0)
     assert result.conflict_score == 0.5
     assert result.agreement_reached is False
+
+
+def test_minimum_first_allocation_reaches_agreement_for_moderate_drought() -> None:
+    scenario = load_scenario_config("configs/drought_mvp.yaml")
+    proposal = minimum_first_allocation(scenario)
+
+    result = evaluate_proposal(scenario, proposal)
+
+    assert result.water_budget_valid is True
+    assert result.conflict_score == 0.0
+    assert result.agreement_reached is True

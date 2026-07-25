@@ -170,3 +170,26 @@ def test_plot_results_command(tmp_path) -> None:
     assert result.exit_code == 0
     assert output_path.exists()
     assert "Saved plot" in result.stdout
+
+
+def test_simulate_minimum_first_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "simulate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "minimum-first",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    output = json.loads(result.stdout)
+
+    assert output["strategy"] == "minimum-first"
+    assert output["scenario_name"] == "moderate_drought_mvp"
+    assert output["water_budget_valid"] is True
+    assert output["conflict_score"] == 0.0
+    assert output["agreement_reached"] is True

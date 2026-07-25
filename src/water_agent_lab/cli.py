@@ -13,6 +13,7 @@ from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, SimulationResult
 from water_agent_lab.simulator import (
+    minimum_first_allocation,
     priority_weighted_allocation,
     proportional_allocation,
 )
@@ -34,8 +35,11 @@ def create_proposal(strategy: str, scenario: ScenarioConfig) -> AllocationPropos
     if strategy == "priority":
         return priority_weighted_allocation(scenario)
 
+    if strategy == "minimum-first":
+        return minimum_first_allocation(scenario)
+
     raise typer.BadParameter(
-        "Unknown strategy. Choose either 'proportional' or 'priority'."
+        "Unknown strategy. Choose: proportional, priority, or minimum-first."
     )
 
 
@@ -64,7 +68,7 @@ def simulate(
         typer.Option(
             "--strategy",
             "-s",
-            help="Allocation strategy to use: proportional or priority.",
+            help="Allocation strategy to use: proportional, priority, or minimum-first.",
         ),
     ] = "proportional",
 ) -> None:
@@ -95,7 +99,7 @@ def compare(
     """
     Compare available water-allocation strategies on one scenario.
     """
-    strategies = ["proportional", "priority"]
+    strategies = ["proportional", "priority", "minimum-first"]
     results = {
         strategy: run_strategy(strategy=strategy, config_path=config)
         for strategy in strategies
@@ -159,7 +163,7 @@ def run_all(
     if not config_paths:
         raise typer.BadParameter(f"No YAML config files found in: {config_dir}")
 
-    strategies = ["proportional", "priority"]
+    strategies = ["proportional", "priority", "minimum-first"]
     rows = []
 
     table = Table(title="All Scenario Strategy Comparison")
