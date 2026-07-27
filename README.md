@@ -207,6 +207,21 @@ Run tests:
 uv run pytest
 ```
 
+
+## Allocation strategies
+
+WaterAgentLab currently supports several deterministic allocation baselines.
+
+| Strategy | Command name | Main idea | Best for | Limitation |
+|---|---|---|---|---|
+| Proportional allocation | `proportional` | Allocates water in proportion to each stakeholder's requested demand. | Simple and transparent baseline. | Does not consider stakeholder priority or minimum acceptable needs. |
+| Priority-weighted allocation | `priority` | Allocates water according to requested demand multiplied by stakeholder priority. | Testing how priority values affect scarcity distribution. | Can leave lower-priority stakeholders below minimum acceptable water. |
+| Minimum-first allocation | `minimum-first` | First tries to satisfy every stakeholder's minimum acceptable water, then distributes remaining water proportionally to unmet demand. | Reducing conflict and protecting minimum needs. | If minimum needs cannot all be satisfied, conflict still remains. |
+| Minimum-priority allocation | `minimum-priority` | First protects minimum acceptable water, then distributes remaining water using priority-weighted unmet demand. | Combining minimum protection with policy priority. | May shift remaining scarcity toward lower-priority stakeholders. |
+
+These strategies are intentionally simple and deterministic. They provide baselines for later comparison with rule-based agents, multi-round negotiation, and LLM-powered stakeholder simulations.
+
+
 ## Design principle
 
 WaterAgentLab separates responsibilities across modules:

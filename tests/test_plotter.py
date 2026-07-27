@@ -1,5 +1,10 @@
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
+
+# import matplotlib.pyplot as plt
 import pandas as pd
 
 from water_agent_lab.plotter import plot_fairness_conflict
