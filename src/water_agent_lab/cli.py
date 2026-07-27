@@ -12,12 +12,15 @@ from water_agent_lab.plotter import plot_fairness_conflict
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, SimulationResult
-from water_agent_lab.simulator import (
-    minimum_first_allocation,
-    minimum_priority_allocation,
-    priority_weighted_allocation,
-    proportional_allocation,
-)
+
+# from water_agent_lab.simulator import (
+#     minimum_first_allocation,
+#     minimum_priority_allocation,
+#     priority_weighted_allocation,
+#     proportional_allocation,
+# )
+from water_agent_lab.strategies import get_strategy, get_strategy_names
+
 
 app = typer.Typer(
     help="WaterAgentLab command-line interface.",
@@ -30,21 +33,12 @@ def create_proposal(strategy: str, scenario: ScenarioConfig) -> AllocationPropos
     """
     Create an allocation proposal for one strategy.
     """
-    if strategy == "proportional":
-        return proportional_allocation(scenario)
+    try:
+        strategy_function = get_strategy(strategy)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
 
-    if strategy == "priority":
-        return priority_weighted_allocation(scenario)
-
-    if strategy == "minimum-first":
-        return minimum_first_allocation(scenario)
-
-    if strategy == "minimum-priority":
-        return minimum_priority_allocation(scenario)
-
-    raise typer.BadParameter(
-        "Unknown strategy. Choose: proportional, priority, minimum-first, or minimum-priority."
-    )
+    return strategy_function(scenario)
 
 
 def run_strategy(strategy: str, config_path: Path) -> SimulationResult:
@@ -72,7 +66,7 @@ def simulate(
         typer.Option(
             "--strategy",
             "-s",
-            help="Allocation strategy to use: proportional, priority, minimum-first, or minimum-priority.",
+            help="Allocation strategy to use.",
         ),
     ] = "proportional",
 ) -> None:
@@ -103,7 +97,7 @@ def compare(
     """
     Compare available water-allocation strategies on one scenario.
     """
-    strategies = ["proportional", "priority", "minimum-first", "minimum-priority"]
+    strategies = get_strategy_names()
     results = {
         strategy: run_strategy(strategy=strategy, config_path=config)
         for strategy in strategies
@@ -171,7 +165,7 @@ def run_all(
     if not config_paths:
         raise typer.BadParameter(f"No YAML config files found in: {config_dir}")
 
-    strategies = ["proportional", "priority", "minimum-first", "minimum-priority"]
+    strategies = get_strategy_names()
     rows = []
 
     table = Table(title="All Scenario Strategy Comparison")
