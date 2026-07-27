@@ -113,6 +113,8 @@ def compare(
     table.add_column("Fairness score")
     table.add_column("Conflict score")
     table.add_column("Agreement reached")
+    table.add_column("Min satisfaction")
+    table.add_column("Shortage")
 
     for strategy, result in results.items():
         table.add_row(
@@ -122,6 +124,8 @@ def compare(
             f"{result.fairness_score:.3f}",
             f"{result.conflict_score:.3f}",
             str(result.agreement_reached),
+            f"{result.minimum_satisfaction_score:.3f}",
+            f"{result.shortage_score:.3f}",
         )
 
     console.print(table)
@@ -175,6 +179,8 @@ def run_all(
     table.add_column("Fairness score")
     table.add_column("Conflict score")
     table.add_column("Agreement reached")
+    table.add_column("Min satisfaction")
+    table.add_column("Shortage")
 
     for _config_path, scenario in scenarios:
         for strategy in strategies:
@@ -192,6 +198,8 @@ def run_all(
                 "fairness_score": result.fairness_score,
                 "conflict_score": result.conflict_score,
                 "agreement_reached": result.agreement_reached,
+                "minimum_satisfaction_score": result.minimum_satisfaction_score,
+                "shortage_score": result.shortage_score,
             }
             rows.append(row)
 
@@ -203,6 +211,8 @@ def run_all(
                 f"{result.fairness_score:.3f}",
                 f"{result.conflict_score:.3f}",
                 str(result.agreement_reached),
+                f"{result.minimum_satisfaction_score:.3f}",
+                f"{result.shortage_score:.3f}",
             )
 
     console.print(table)

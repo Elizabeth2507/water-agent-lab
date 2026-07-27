@@ -87,4 +87,6 @@ class SimulationResult(BaseModel):
     agreement_reached: bool
     fairness_score: float
     conflict_score: float
+    minimum_satisfaction_score: float
+    shortage_score: float
     allocations: dict[str, float]

@@ -84,6 +84,12 @@ def evaluate_proposal(
 
     agreement_reached = water_budget_valid and conflict_score == 0.0
 
+    minimum_satisfaction_score = compute_minimum_satisfaction_score(config, proposal)
+    shortage_score = compute_shortage_score(
+        total_requested=total_requested,
+        total_allocated=total_allocated,
+    )
+
     return SimulationResult(
         scenario_name=config.scenario_name,
         country=config.country,
@@ -96,5 +102,41 @@ def evaluate_proposal(
         agreement_reached=agreement_reached,
         fairness_score=fairness_score,
         conflict_score=conflict_score,
+        minimum_satisfaction_score=minimum_satisfaction_score,
+        shortage_score=shortage_score,
         allocations=proposal.allocations,
     )
+
+
+def compute_minimum_satisfaction_score(
+    config: ScenarioConfig,
+    proposal: AllocationProposal,
+) -> float:
+    """
+    Compute how well allocations satisfy minimum acceptable needs.
+
+    A score of 1.0 means every stakeholder receives at least
+    its minimum acceptable water.
+    """
+    minimum_satisfaction_ratios = []
+
+    for stakeholder in config.stakeholders:
+        allocated = proposal.allocations.get(stakeholder.name, 0.0)
+
+        if stakeholder.minimum_acceptable_water == 0:
+            minimum_satisfaction_ratios.append(1.0)
+        else:
+            ratio = allocated / stakeholder.minimum_acceptable_water
+            minimum_satisfaction_ratios.append(min(ratio, 1.0))
+
+    return sum(minimum_satisfaction_ratios) / len(minimum_satisfaction_ratios)
+
+
+def compute_shortage_score(
+    total_requested: float,
+    total_allocated: float,
+) -> float:
+    """
+    Compute the fraction of requested water that was not allocated.
+    """
+    return 1.0 - (total_allocated / total_requested)
