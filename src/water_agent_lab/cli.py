@@ -21,6 +21,7 @@ from water_agent_lab.reporting import generate_experiment_report
 #     proportional_allocation,
 # )
 from water_agent_lab.strategies import get_strategy, get_strategy_names
+from water_agent_lab.agents import evaluate_stakeholder_responses
 
 
 app = typer.Typer(
@@ -313,6 +314,60 @@ def generate_report(
         raise typer.BadParameter(str(error)) from error
 
     console.print(f"[green]Saved experiment report to {output}[/green]")
+
+
+@app.command("agent-responses")
+def agent_responses(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ],
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            "-s",
+            help="Allocation strategy to use.",
+        ),
+    ] = "proportional",
+) -> None:
+    """
+    Show rule-based stakeholder responses to an allocation proposal.
+    """
+    scenario = load_scenario_config(config)
+    proposal = create_proposal(strategy=strategy, scenario=scenario)
+
+    responses = evaluate_stakeholder_responses(
+        stakeholders=scenario.stakeholders,
+        proposal=proposal,
+    )
+
+    table = Table(title="Rule-Based Stakeholder Responses")
+
+    table.add_column("Stakeholder")
+    table.add_column("Allocated")
+    table.add_column("Requested")
+    table.add_column("Minimum")
+    table.add_column("Satisfaction")
+    table.add_column("Status")
+    table.add_column("Message")
+
+    for response in responses:
+        table.add_row(
+            response.stakeholder_name,
+            f"{response.allocated_water:.2f}",
+            f"{response.requested_water:.2f}",
+            f"{response.minimum_acceptable_water:.2f}",
+            f"{response.satisfaction_ratio:.3f}",
+            response.status,
+            response.message,
+        )
+
+    console.print(table)
 
 
 @app.command("version")

@@ -282,3 +282,19 @@ def test_generate_report_command_rejects_non_markdown_output(
     )
 
     assert report_result.exit_code != 0
+
+
+def test_agent_responses_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "agent-responses",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "minimum-first",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Rule-Based Stakeholder Responses" in result.stdout

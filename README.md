@@ -25,6 +25,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Conflict score
 - Agreement detection
 - Command-line interface
+- Rule-based stakeholder responses
 
 ## Planned extensions
 
@@ -103,6 +104,11 @@ Export all scenario results:
 uv run water-agent-lab run-all --config-dir configs --output outputs/results.csv
 ```
 
+Show stakeholder responses to an allocation:
+
+```bash
+uv run water-agent-lab agent-responses --config configs/drought_mvp.yaml --strategy minimum-first
+```
 
 Plot fairness and conflict scores:
 
@@ -123,6 +129,16 @@ Show help for the simulation command:
 uv run water-agent-lab simulate --help
 ```
 
+
+### `generate-report`
+
+Generate a Markdown experiment summary report from CSV results.
+
+```bash
+uv run water-agent-lab generate-report \
+  --input outputs/all_results.csv \
+  --output docs/experiment_report.md
+```
 
 
 ## Example scenario
@@ -222,6 +238,22 @@ WaterAgentLab currently supports several deterministic allocation baselines.
 These strategies are intentionally simple and deterministic. They provide baselines for later comparison with rule-based agents, multi-round negotiation, and LLM-powered stakeholder simulations.
 
 
+```markdown
+## Rule-based stakeholder agents
+
+WaterAgentLab includes simple rule-based stakeholder agents.
+
+Each agent evaluates an allocation proposal and returns one of three statuses:
+
+| Status | Meaning |
+|---|---|
+| `accepted` | The allocation is close to the stakeholder's requested demand. |
+| `concerned` | The allocation is above the minimum acceptable level but below requested demand. |
+| `rejected` | The allocation is below the minimum acceptable level. |
+
+These agents are deterministic and transparent. They are the first step toward future multi-round negotiation and LLM-powered stakeholder simulation.
+
+
 ## Design principle
 
 WaterAgentLab separates responsibilities across modules:
@@ -240,3 +272,6 @@ A short explanation of the first scenario comparison is available in:
 
 ```text
 docs/results.md
+
+```markdown
+- [Experiment report](docs/experiment_report.md)
