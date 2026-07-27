@@ -32,6 +32,7 @@ from water_agent_lab.negotiation_summary import (
     summarize_negotiation_history,
 )
 from water_agent_lab.logging_utils import configure_logging, log_event
+from water_agent_lab.run_metadata import create_run_metadata
 
 
 app = typer.Typer(
@@ -93,12 +94,16 @@ def simulate(
     Run a water-allocation simulation on a drought scenario.
     """
     logger = configure_logging(log_file)
+
+    run_metadata = create_run_metadata(command="simulate")
+
     scenario = load_scenario_config(config)
 
     log_event(
         logger,
         event="simulation_started",
         message="Simulation started.",
+        **run_metadata,
         scenario_name=scenario.scenario_name,
         config_path=str(config),
         strategy=strategy,
@@ -111,6 +116,7 @@ def simulate(
         logger,
         event="simulation_completed",
         message="Simulation completed.",
+        **run_metadata,
         scenario_name=result.scenario_name,
         strategy=strategy,
         agreement_reached=result.agreement_reached,
@@ -121,6 +127,7 @@ def simulate(
     )
 
     output = {
+        "run_metadata": run_metadata,
         "strategy": strategy,
         **result.model_dump(),
     }
@@ -519,10 +526,13 @@ def negotiate_multi(
 
     logger = configure_logging(log_file)
 
+    run_metadata = create_run_metadata(command="negotiate-multi")
+
     log_event(
         logger,
         event="negotiation_started",
         message="Multi-round negotiation started.",
+        **run_metadata,
         config_path=str(config),
         initial_strategy=strategy,
     )
@@ -535,6 +545,7 @@ def negotiate_multi(
         logger,
         event="negotiation_completed",
         message="Multi-round negotiation completed.",
+        **run_metadata,
         scenario_name=result.scenario_name,
         initial_strategy=result.initial_strategy,
         agreement_reached=result.agreement_reached,
@@ -556,6 +567,7 @@ def negotiate_multi(
             logger,
             event="negotiation_round_completed",
             message="Negotiation round completed.",
+            **run_metadata,
             round_number=negotiation_round.round_number,
             strategy=negotiation_round.strategy,
             conflict_score=negotiation_round.result.conflict_score,

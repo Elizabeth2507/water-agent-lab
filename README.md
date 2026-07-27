@@ -30,6 +30,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Multi-round rule-based negotiation
 - Negotiation history summarization
 - Structured JSON logging for simulation and negotiation runs
+- Run metadata with unique run IDs and UTC timestamps
 
 ## Planned extensions
 

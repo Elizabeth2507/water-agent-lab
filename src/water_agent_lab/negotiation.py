@@ -197,6 +197,7 @@ def run_multi_round_negotiation(
 def save_negotiation_history_json(
     result: MultiRoundNegotiationResult,
     output_path: str | Path,
+    run_metadata: dict[str, str] | None = None,
 ) -> None:
     """
     Save multi-round negotiation history to a JSON file.
@@ -204,9 +205,14 @@ def save_negotiation_history_json(
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    output_data = result.model_dump()
+
+    if run_metadata is not None:
+        output_data["run_metadata"] = run_metadata
+
     with path.open("w", encoding="utf-8") as file:
         json.dump(
-            result.model_dump(),
+            output_data,
             file,
             indent=2,
         )

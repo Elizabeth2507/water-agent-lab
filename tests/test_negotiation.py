@@ -94,3 +94,29 @@ def test_save_negotiation_history_json(tmp_path: Path) -> None:
     assert len(content["rounds"]) == 2
     assert content["rounds"][0]["strategy"] == "proportional"
     assert content["rounds"][1]["strategy"] == "minimum-first"
+
+
+def test_save_negotiation_history_json_with_run_metadata(tmp_path: Path) -> None:
+    output_path = tmp_path / "negotiation_history.json"
+
+    result = run_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    run_metadata = {
+        "run_id": "test-run-id",
+        "created_at_utc": "2026-01-01T00:00:00+00:00",
+        "command": "negotiate-multi",
+    }
+
+    save_negotiation_history_json(
+        result=result,
+        output_path=output_path,
+        run_metadata=run_metadata,
+    )
+
+    content = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert content["run_metadata"]["run_id"] == "test-run-id"
+    assert content["run_metadata"]["command"] == "negotiate-multi"
