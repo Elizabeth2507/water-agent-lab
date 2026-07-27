@@ -1,5 +1,6 @@
 import json
 
+from pathlib import Path
 from typer.testing import CliRunner
 
 from water_agent_lab.cli import app
@@ -214,3 +215,70 @@ def test_simulate_minimum_priority_command() -> None:
     assert output["conflict_score"] == 0.0
     assert output["minimum_satisfaction_score"] == 1.0
     assert output["agreement_reached"] is True
+
+
+def test_generate_report_command(tmp_path: Path) -> None:
+    results_path = tmp_path / "all_results.csv"
+    report_path = tmp_path / "experiment_report.md"
+
+    run_all_result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(results_path),
+        ],
+    )
+
+    assert run_all_result.exit_code == 0
+    assert results_path.exists()
+
+    report_result = runner.invoke(
+        app,
+        [
+            "generate-report",
+            "--input",
+            str(results_path),
+            "--output",
+            str(report_path),
+        ],
+    )
+
+    assert report_result.exit_code == 0
+    assert report_path.exists()
+    assert "Saved experiment report" in report_result.stdout
+
+
+def test_generate_report_command_rejects_non_markdown_output(
+    tmp_path: Path,
+) -> None:
+    results_path = tmp_path / "all_results.csv"
+    report_path = tmp_path / "experiment_report.txt"
+
+    run_all_result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(results_path),
+        ],
+    )
+
+    assert run_all_result.exit_code == 0
+
+    report_result = runner.invoke(
+        app,
+        [
+            "generate-report",
+            "--input",
+            str(results_path),
+            "--output",
+            str(report_path),
+        ],
+    )
+
+    assert report_result.exit_code != 0

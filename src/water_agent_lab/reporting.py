@@ -161,9 +161,7 @@ def generate_experiment_report(
     drought_summary = summarize_by_drought_level(dataframe)
     best_strategies = find_best_strategy_by_conflict(dataframe)
 
-    drought_levels = ", ".join(
-        sorted(dataframe["drought_level"].astype(str).unique())
-    )
+    drought_levels = ", ".join(sorted(dataframe["drought_level"].astype(str).unique()))
 
     content_parts = [
         "# WaterAgentLab Experiment Report",
