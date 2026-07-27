@@ -142,7 +142,9 @@ def minimum_priority_allocation(config: ScenarioConfig) -> AllocationProposal:
     )
 
     for stakeholder in config.stakeholders:
-        unmet_demand = stakeholder.requested_water - stakeholder.minimum_acceptable_water
+        unmet_demand = (
+            stakeholder.requested_water - stakeholder.minimum_acceptable_water
+        )
         weighted_unmet_demand = unmet_demand * stakeholder.priority
 
         allocations[stakeholder.name] += (
