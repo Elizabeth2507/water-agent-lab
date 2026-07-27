@@ -298,3 +298,36 @@ def test_agent_responses_command() -> None:
 
     assert result.exit_code == 0
     assert "Rule-Based Stakeholder Responses" in result.stdout
+
+
+def test_negotiate_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "negotiate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Simple Negotiation Round" in result.stdout
+
+
+def test_negotiate_multi_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "negotiate-multi",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Multi-Round Negotiation" in result.stdout
+    assert "Final agreement reached" in result.stdout

@@ -90,3 +90,103 @@ def run_simple_negotiation(
         revised_result=revised_result,
         revised_responses=revised_responses,
     )
+
+
+class NegotiationRound(BaseModel):
+    """
+    One round of negotiation.
+    """
+
+    round_number: int
+    strategy: str
+    result: SimulationResult
+    responses: list[StakeholderResponse]
+    rejected_stakeholders: list[str]
+
+
+class MultiRoundNegotiationResult(BaseModel):
+    """
+    Result of a multi-round negotiation process.
+    """
+
+    scenario_name: str
+    initial_strategy: str
+    agreement_reached: bool
+    rounds_used: int
+    max_rounds: int
+    rounds: list[NegotiationRound]
+
+
+def choose_revision_strategy(current_strategy: str) -> str:
+    """
+    Choose a revised strategy after stakeholder rejection.
+    """
+    if current_strategy == "proportional":
+        return "minimum-first"
+
+    if current_strategy == "priority":
+        return "minimum-priority"
+
+    return current_strategy
+
+
+def run_multi_round_negotiation(
+    config_path: str,
+    initial_strategy: str = "proportional",
+) -> MultiRoundNegotiationResult:
+    """
+    Run a simple multi-round negotiation process.
+
+    The process stops when agreement is reached or max_rounds is reached.
+    """
+    from water_agent_lab.config import load_scenario_config
+
+    scenario = load_scenario_config(config_path)
+    current_strategy = initial_strategy
+    rounds = []
+
+    for round_number in range(1, scenario.max_rounds + 1):
+        strategy_function = get_strategy(current_strategy)
+        proposal = strategy_function(scenario)
+
+        result = evaluate_proposal(scenario, proposal)
+        responses = evaluate_stakeholder_responses(
+            stakeholders=scenario.stakeholders,
+            proposal=proposal,
+        )
+
+        rejected_stakeholders = [
+            response.stakeholder_name
+            for response in responses
+            if response.status == "rejected"
+        ]
+
+        negotiation_round = NegotiationRound(
+            round_number=round_number,
+            strategy=current_strategy,
+            result=result,
+            responses=responses,
+            rejected_stakeholders=rejected_stakeholders,
+        )
+        rounds.append(negotiation_round)
+
+        if not rejected_stakeholders:
+            break
+
+        revised_strategy = choose_revision_strategy(current_strategy)
+
+        if revised_strategy == current_strategy:
+            break
+
+        current_strategy = revised_strategy
+
+    final_round = rounds[-1]
+
+    return MultiRoundNegotiationResult(
+        scenario_name=scenario.scenario_name,
+        initial_strategy=initial_strategy,
+        agreement_reached=final_round.result.agreement_reached,
+        rounds_used=len(rounds),
+        max_rounds=scenario.max_rounds,
+        rounds=rounds,
+    )

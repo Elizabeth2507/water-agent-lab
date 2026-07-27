@@ -22,7 +22,10 @@ from water_agent_lab.reporting import generate_experiment_report
 # )
 from water_agent_lab.strategies import get_strategy, get_strategy_names
 from water_agent_lab.agents import evaluate_stakeholder_responses
-from water_agent_lab.negotiation import run_simple_negotiation
+from water_agent_lab.negotiation import (
+    run_multi_round_negotiation,
+    run_simple_negotiation,
+)
 
 
 app = typer.Typer(
@@ -435,6 +438,57 @@ def negotiate(
         )
 
     console.print(table)
+
+
+@app.command("negotiate-multi")
+def negotiate_multi(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ],
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            "-s",
+            help="Initial allocation strategy to use.",
+        ),
+    ] = "proportional",
+) -> None:
+    """
+    Run a multi-round rule-based negotiation process.
+    """
+    result = run_multi_round_negotiation(
+        config_path=str(config),
+        initial_strategy=strategy,
+    )
+
+    table = Table(title="Multi-Round Negotiation")
+
+    table.add_column("Round")
+    table.add_column("Strategy")
+    table.add_column("Conflict score")
+    table.add_column("Min satisfaction")
+    table.add_column("Agreement reached")
+    table.add_column("Rejected stakeholders")
+
+    for negotiation_round in result.rounds:
+        table.add_row(
+            str(negotiation_round.round_number),
+            negotiation_round.strategy,
+            f"{negotiation_round.result.conflict_score:.3f}",
+            f"{negotiation_round.result.minimum_satisfaction_score:.3f}",
+            str(negotiation_round.result.agreement_reached),
+            ", ".join(negotiation_round.rejected_stakeholders) or "none",
+        )
+
+    console.print(table)
+    console.print(f"Rounds used: {result.rounds_used}/{result.max_rounds}")
+    console.print(f"Final agreement reached: {result.agreement_reached}")
 
 
 @app.command("version")

@@ -27,6 +27,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Command-line interface
 - Rule-based stakeholder responses
 - Simple rule-based negotiation round
+- Multi-round rule-based negotiation
 
 ## Planned extensions
 
@@ -117,6 +118,12 @@ Plot fairness and conflict scores:
 uv run water-agent-lab plot-results --input outputs/results.csv --output outputs/fairness_conflict.png
 ```
 
+
+Run a multi-round negotiation:
+
+```bash
+uv run water-agent-lab negotiate-multi --config configs/drought_mvp.yaml --strategy proportional
+```
 
 Show CLI help:
 
@@ -253,6 +260,24 @@ Each agent evaluates an allocation proposal and returns one of three statuses:
 | `rejected` | The allocation is below the minimum acceptable level. |
 
 These agents are deterministic and transparent. They are the first step toward future multi-round negotiation and LLM-powered stakeholder simulation.
+
+
+## Simple negotiation
+
+WaterAgentLab includes a first simple negotiation loop.
+
+The system first runs an initial allocation strategy. Stakeholder agents then evaluate the proposal. If any stakeholder rejects the proposal because it falls below minimum acceptable water, the system revises the allocation using the `minimum-first` strategy.
+
+This is not yet full multi-round negotiation, but it provides the first step toward agent-based stakeholder interaction.
+
+
+## Multi-round negotiation
+
+WaterAgentLab includes a simple multi-round negotiation loop.
+
+The system starts with an initial allocation strategy, collects stakeholder responses, and revises the strategy when stakeholders reject the proposal. The process stops when agreement is reached or the scenario's `max_rounds` limit is reached.
+
+This is still rule-based and deterministic, but it provides the foundation for future agent-based and LLM-powered negotiation.
 
 
 ## Design principle
