@@ -25,6 +25,7 @@ from water_agent_lab.agents import evaluate_stakeholder_responses
 from water_agent_lab.negotiation import (
     run_multi_round_negotiation,
     run_simple_negotiation,
+    save_negotiation_history_json,
 )
 
 
@@ -458,6 +459,14 @@ def negotiate_multi(
             help="Initial allocation strategy to use.",
         ),
     ] = "proportional",
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save negotiation history as JSON.",
+        ),
+    ] = None,
 ) -> None:
     """
     Run a multi-round rule-based negotiation process.
@@ -489,6 +498,13 @@ def negotiate_multi(
     console.print(table)
     console.print(f"Rounds used: {result.rounds_used}/{result.max_rounds}")
     console.print(f"Final agreement reached: {result.agreement_reached}")
+
+    if output is not None:
+        if output.suffix != ".json":
+            raise typer.BadParameter("Negotiation history output must end with .json.")
+
+        save_negotiation_history_json(result=result, output_path=output)
+        console.print(f"[green]Saved negotiation history to {output}[/green]")
 
 
 @app.command("version")

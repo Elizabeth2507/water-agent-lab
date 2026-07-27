@@ -331,3 +331,24 @@ def test_negotiate_multi_command() -> None:
     assert result.exit_code == 0
     assert "Multi-Round Negotiation" in result.stdout
     assert "Final agreement reached" in result.stdout
+
+
+def test_negotiate_multi_command_with_json_output(tmp_path) -> None:
+    output_path = tmp_path / "negotiation_history.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "negotiate-multi",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved negotiation history" in result.stdout

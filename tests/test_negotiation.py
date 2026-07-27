@@ -1,7 +1,10 @@
+import json
+from pathlib import Path
 from water_agent_lab.negotiation import run_simple_negotiation
 from water_agent_lab.negotiation import (
     choose_revision_strategy,
     run_multi_round_negotiation,
+    save_negotiation_history_json,
 )
 
 
@@ -65,3 +68,29 @@ def test_multi_round_negotiation_does_not_reach_agreement_for_extreme_drought() 
     assert result.scenario_name == "extreme_drought"
     assert result.agreement_reached is False
     assert result.rounds_used >= 1
+
+
+def test_save_negotiation_history_json(tmp_path: Path) -> None:
+    output_path = tmp_path / "negotiation_history.json"
+
+    result = run_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    save_negotiation_history_json(
+        result=result,
+        output_path=output_path,
+    )
+
+    assert output_path.exists()
+
+    content = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert content["scenario_name"] == "moderate_drought_mvp"
+    assert content["initial_strategy"] == "proportional"
+    assert content["agreement_reached"] is True
+    assert content["rounds_used"] == 2
+    assert len(content["rounds"]) == 2
+    assert content["rounds"][0]["strategy"] == "proportional"
+    assert content["rounds"][1]["strategy"] == "minimum-first"

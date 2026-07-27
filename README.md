@@ -125,6 +125,15 @@ Run a multi-round negotiation:
 uv run water-agent-lab negotiate-multi --config configs/drought_mvp.yaml --strategy proportional
 ```
 
+Run a multi-round negotiation and save the full negotiation history:
+
+```bash
+uv run water-agent-lab negotiate-multi --config configs/drought_mvp.yaml --strategy proportional --output outputs/negotiation_history.json
+```
+
+```markdown
+The saved negotiation history includes each negotiation round, the strategy used, evaluation metrics, stakeholder responses, and rejected stakeholders.
+
 Show CLI help:
 
 ```bash

@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from pydantic import BaseModel
 
 from water_agent_lab.agents import StakeholderResponse, evaluate_stakeholder_responses
@@ -190,3 +192,21 @@ def run_multi_round_negotiation(
         max_rounds=scenario.max_rounds,
         rounds=rounds,
     )
+
+
+def save_negotiation_history_json(
+    result: MultiRoundNegotiationResult,
+    output_path: str | Path,
+) -> None:
+    """
+    Save multi-round negotiation history to a JSON file.
+    """
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(
+            result.model_dump(),
+            file,
+            indent=2,
+        )
