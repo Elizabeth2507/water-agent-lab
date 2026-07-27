@@ -385,3 +385,54 @@ def test_summarize_negotiation_command(tmp_path) -> None:
     assert summary_result.exit_code == 0
     assert "Negotiation Summary" in summary_result.stdout
     assert "Rejected Stakeholders by Round" in summary_result.stdout
+
+
+def test_simulate_command_with_log_file(tmp_path) -> None:
+    log_path = tmp_path / "simulation.log"
+
+    result = runner.invoke(
+        app,
+        [
+            "simulate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--log-file",
+            str(log_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert log_path.exists()
+
+    log_content = log_path.read_text(encoding="utf-8")
+
+    assert "simulation_started" in log_content
+    assert "simulation_completed" in log_content
+
+
+def test_negotiate_multi_command_with_log_file(tmp_path) -> None:
+    log_path = tmp_path / "negotiation.log"
+
+    result = runner.invoke(
+        app,
+        [
+            "negotiate-multi",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--log-file",
+            str(log_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert log_path.exists()
+
+    log_content = log_path.read_text(encoding="utf-8")
+
+    assert "negotiation_started" in log_content
+    assert "negotiation_completed" in log_content
+    assert "negotiation_round_completed" in log_content

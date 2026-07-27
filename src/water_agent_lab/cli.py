@@ -31,6 +31,7 @@ from water_agent_lab.negotiation_summary import (
     load_negotiation_history,
     summarize_negotiation_history,
 )
+from water_agent_lab.logging_utils import configure_logging, log_event
 
 
 app = typer.Typer(
@@ -80,11 +81,44 @@ def simulate(
             help="Allocation strategy to use.",
         ),
     ] = "proportional",
+    log_file: Annotated[
+        Path | None,
+        typer.Option(
+            "--log-file",
+            help="Optional path to save structured JSON logs.",
+        ),
+    ] = None,
 ) -> None:
     """
     Run a water-allocation simulation on a drought scenario.
     """
-    result = run_strategy(strategy=strategy, config_path=config)
+    logger = configure_logging(log_file)
+    scenario = load_scenario_config(config)
+
+    log_event(
+        logger,
+        event="simulation_started",
+        message="Simulation started.",
+        scenario_name=scenario.scenario_name,
+        config_path=str(config),
+        strategy=strategy,
+    )
+    # result = run_strategy(strategy=strategy, config_path=config)
+    proposal = create_proposal(strategy=strategy, scenario=scenario)
+    result = evaluate_proposal(scenario, proposal)
+
+    log_event(
+        logger,
+        event="simulation_completed",
+        message="Simulation completed.",
+        scenario_name=result.scenario_name,
+        strategy=strategy,
+        agreement_reached=result.agreement_reached,
+        fairness_score=result.fairness_score,
+        conflict_score=result.conflict_score,
+        minimum_satisfaction_score=result.minimum_satisfaction_score,
+        shortage_score=result.shortage_score,
+    )
 
     output = {
         "strategy": strategy,
@@ -471,13 +505,41 @@ def negotiate_multi(
             help="Optional path to save negotiation history as JSON.",
         ),
     ] = None,
+    log_file: Annotated[
+        Path | None,
+        typer.Option(
+            "--log-file",
+            help="Optional path to save structured JSON logs.",
+        ),
+    ] = None,
 ) -> None:
     """
     Run a multi-round rule-based negotiation process.
     """
+
+    logger = configure_logging(log_file)
+
+    log_event(
+        logger,
+        event="negotiation_started",
+        message="Multi-round negotiation started.",
+        config_path=str(config),
+        initial_strategy=strategy,
+    )
+
     result = run_multi_round_negotiation(
         config_path=str(config),
         initial_strategy=strategy,
+    )
+    log_event(
+        logger,
+        event="negotiation_completed",
+        message="Multi-round negotiation completed.",
+        scenario_name=result.scenario_name,
+        initial_strategy=result.initial_strategy,
+        agreement_reached=result.agreement_reached,
+        rounds_used=result.rounds_used,
+        max_rounds=result.max_rounds,
     )
 
     table = Table(title="Multi-Round Negotiation")
@@ -490,6 +552,19 @@ def negotiate_multi(
     table.add_column("Rejected stakeholders")
 
     for negotiation_round in result.rounds:
+        log_event(
+            logger,
+            event="negotiation_round_completed",
+            message="Negotiation round completed.",
+            round_number=negotiation_round.round_number,
+            strategy=negotiation_round.strategy,
+            conflict_score=negotiation_round.result.conflict_score,
+            minimum_satisfaction_score=(
+                negotiation_round.result.minimum_satisfaction_score
+            ),
+            agreement_reached=negotiation_round.result.agreement_reached,
+            rejected_stakeholders=negotiation_round.rejected_stakeholders,
+        )
         table.add_row(
             str(negotiation_round.round_number),
             negotiation_round.strategy,

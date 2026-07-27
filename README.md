@@ -29,6 +29,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Simple rule-based negotiation round
 - Multi-round rule-based negotiation
 - Negotiation history summarization
+- Structured JSON logging for simulation and negotiation runs
 
 ## Planned extensions
 
@@ -144,6 +145,12 @@ uv run water-agent-lab summarize-negotiation --input outputs/negotiation_history
 
 ```markdown
 The negotiation summary command reads a saved negotiation history JSON file and prints a compact explanation of the strategy sequence, rejected stakeholders, final metrics, and agreement status.
+```
+
+Run a simulation with structured logs:
+
+```bash
+uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy proportional --log-file outputs/simulation.log
 ```
 
 Show CLI help:
@@ -299,6 +306,13 @@ WaterAgentLab includes a simple multi-round negotiation loop.
 The system starts with an initial allocation strategy, collects stakeholder responses, and revises the strategy when stakeholders reject the proposal. The process stops when agreement is reached or the scenario's `max_rounds` limit is reached.
 
 This is still rule-based and deterministic, but it provides the foundation for future agent-based and LLM-powered negotiation.
+
+
+## Structured logging
+
+WaterAgentLab can write structured JSON logs for simulation and negotiation runs.
+
+Each log line is a JSON object containing an event name, message, level, and context fields. This makes runs easier to inspect, debug, and later connect to experiment tracking tools.
 
 
 ## Design principle
