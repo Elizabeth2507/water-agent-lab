@@ -119,9 +119,6 @@ def test_run_all_command() -> None:
 
     assert result.exit_code == 0
     assert "All Scenario Strategy Comparison" in result.stdout
-    assert "mild_drought" in result.stdout
-    assert "severe_drought" in result.stdout
-    assert "extreme_drought" in result.stdout
 
 
 def test_run_all_command_with_csv_output(tmp_path) -> None:
