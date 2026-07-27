@@ -12,6 +12,7 @@ from water_agent_lab.plotter import plot_fairness_conflict
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, SimulationResult
+from water_agent_lab.reporting import generate_experiment_report
 
 # from water_agent_lab.simulator import (
 #     minimum_first_allocation,
@@ -274,6 +275,44 @@ def plot_results(
     plot_fairness_conflict(input_path=input_path, output_path=output)
 
     console.print(f"[green]Saved plot to {output}[/green]")
+
+
+@app.command("generate-report")
+def generate_report(
+    input: Annotated[
+        Path,
+        typer.Option(
+            "--input",
+            "-i",
+            help="Path to CSV results produced by run-all.",
+        ),
+    ] = Path("outputs/all_results.csv"),
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the Markdown experiment report.",
+        ),
+    ] = Path("docs/experiment_report.md"),
+) -> None:
+    """
+    Generate a Markdown experiment summary report from CSV results.
+    """
+    if output.suffix != ".md":
+        raise typer.BadParameter("Output report file must end with .md.")
+
+    try:
+        generate_experiment_report(
+            input_path=input,
+            output_path=output,
+        )
+    except FileNotFoundError as error:
+        raise typer.BadParameter(str(error)) from error
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    console.print(f"[green]Saved experiment report to {output}[/green]")
 
 
 @app.command("version")
