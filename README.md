@@ -26,6 +26,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Agreement detection
 - Command-line interface
 - Rule-based stakeholder responses
+- Simple rule-based negotiation round
 
 ## Planned extensions
 

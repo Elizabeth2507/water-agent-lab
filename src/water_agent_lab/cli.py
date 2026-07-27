@@ -22,6 +22,7 @@ from water_agent_lab.reporting import generate_experiment_report
 # )
 from water_agent_lab.strategies import get_strategy, get_strategy_names
 from water_agent_lab.agents import evaluate_stakeholder_responses
+from water_agent_lab.negotiation import run_simple_negotiation
 
 
 app = typer.Typer(
@@ -365,6 +366,72 @@ def agent_responses(
             f"{response.satisfaction_ratio:.3f}",
             response.status,
             response.message,
+        )
+
+    console.print(table)
+
+
+@app.command("negotiate")
+def negotiate(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ],
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            "-s",
+            help="Initial allocation strategy to use.",
+        ),
+    ] = "proportional",
+) -> None:
+    """
+    Run a simple negotiation round.
+
+    Rejected stakeholder responses trigger a revised minimum-first allocation.
+    """
+    result = run_simple_negotiation(
+        config_path=str(config),
+        initial_strategy=strategy,
+    )
+
+    table = Table(title="Simple Negotiation Round")
+
+    table.add_column("Stage")
+    table.add_column("Strategy")
+    table.add_column("Conflict score")
+    table.add_column("Min satisfaction")
+    table.add_column("Agreement reached")
+    table.add_column("Rejected stakeholders")
+
+    table.add_row(
+        "initial",
+        result.initial_strategy,
+        f"{result.initial_result.conflict_score:.3f}",
+        f"{result.initial_result.minimum_satisfaction_score:.3f}",
+        str(result.initial_result.agreement_reached),
+        ", ".join(result.rejected_stakeholders) or "none",
+    )
+
+    if result.revised_result is not None and result.revised_strategy is not None:
+        revised_rejections = [
+            response.stakeholder_name
+            for response in result.revised_responses or []
+            if response.status == "rejected"
+        ]
+
+        table.add_row(
+            "revised",
+            result.revised_strategy,
+            f"{result.revised_result.conflict_score:.3f}",
+            f"{result.revised_result.minimum_satisfaction_score:.3f}",
+            str(result.revised_result.agreement_reached),
+            ", ".join(revised_rejections) or "none",
         )
 
     console.print(table)
