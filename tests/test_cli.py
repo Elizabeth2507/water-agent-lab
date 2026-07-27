@@ -190,3 +190,27 @@ def test_simulate_minimum_first_command() -> None:
     assert output["water_budget_valid"] is True
     assert output["conflict_score"] == 0.0
     assert output["agreement_reached"] is True
+
+
+def test_simulate_minimum_priority_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "simulate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "minimum-priority",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    output = json.loads(result.stdout)
+
+    assert output["strategy"] == "minimum-priority"
+    assert output["scenario_name"] == "moderate_drought_mvp"
+    assert output["water_budget_valid"] is True
+    assert output["conflict_score"] == 0.0
+    assert output["minimum_satisfaction_score"] == 1.0
+    assert output["agreement_reached"] is True

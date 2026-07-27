@@ -19,6 +19,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Proportional allocation baseline
 - Priority-weighted allocation baseline
 - Minimum-first allocation baseline
+- Minimum-priority allocation baseline
 - Water-budget validation
 - Fairness score
 - Conflict score
@@ -77,6 +78,12 @@ Run the minimum-first baseline:
 ```bash
 uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy minimum-first
 ```
+
+Run the minimum-priority baseline:
+
+```bash
+uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy minimum-priority
+
 
 Compare available strategies:
 
