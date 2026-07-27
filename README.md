@@ -28,6 +28,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Rule-based stakeholder responses
 - Simple rule-based negotiation round
 - Multi-round rule-based negotiation
+- Negotiation history summarization
 
 ## Planned extensions
 
@@ -90,7 +91,7 @@ uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy min
 
 Compare available strategies:
 
-```
+```bash
 uv run water-agent-lab compare --config configs/drought_mvp.yaml
 ```
 
@@ -133,6 +134,17 @@ uv run water-agent-lab negotiate-multi --config configs/drought_mvp.yaml --strat
 
 ```markdown
 The saved negotiation history includes each negotiation round, the strategy used, evaluation metrics, stakeholder responses, and rejected stakeholders.
+
+
+Summarize a saved negotiation history:
+
+```bash
+uv run water-agent-lab summarize-negotiation --input outputs/negotiation_history.json
+```
+
+```markdown
+The negotiation summary command reads a saved negotiation history JSON file and prints a compact explanation of the strategy sequence, rejected stakeholders, final metrics, and agreement status.
+```
 
 Show CLI help:
 

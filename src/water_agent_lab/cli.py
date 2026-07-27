@@ -27,6 +27,10 @@ from water_agent_lab.negotiation import (
     run_simple_negotiation,
     save_negotiation_history_json,
 )
+from water_agent_lab.negotiation_summary import (
+    load_negotiation_history,
+    summarize_negotiation_history,
+)
 
 
 app = typer.Typer(
@@ -505,6 +509,65 @@ def negotiate_multi(
 
         save_negotiation_history_json(result=result, output_path=output)
         console.print(f"[green]Saved negotiation history to {output}[/green]")
+
+
+@app.command("summarize-negotiation")
+def summarize_negotiation(
+    input_path: Annotated[
+        Path,
+        typer.Option(
+            "--input",
+            "-i",
+            help="Path to a saved negotiation history JSON file.",
+        ),
+    ],
+) -> None:
+    """
+    Summarize a saved negotiation history JSON file.
+    """
+    history = load_negotiation_history(input_path)
+    summary = summarize_negotiation_history(history)
+
+    table = Table(title="Negotiation Summary")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Scenario", summary["scenario_name"])
+    table.add_row("Initial strategy", summary["initial_strategy"])
+    table.add_row("Final strategy", summary["final_strategy"])
+    table.add_row("Rounds used", f"{summary['rounds_used']}/{summary['max_rounds']}")
+    table.add_row("Agreement reached", str(summary["agreement_reached"]))
+    table.add_row(
+        "Strategy sequence",
+        " → ".join(summary["strategy_sequence"]),
+    )
+    table.add_row(
+        "Final conflict score",
+        f"{summary['final_conflict_score']:.3f}",
+    )
+    table.add_row(
+        "Final minimum satisfaction",
+        f"{summary['final_minimum_satisfaction_score']:.3f}",
+    )
+    table.add_row(
+        "Final fairness score",
+        f"{summary['final_fairness_score']:.3f}",
+    )
+
+    console.print(table)
+
+    rejected_table = Table(title="Rejected Stakeholders by Round")
+    rejected_table.add_column("Round")
+    rejected_table.add_column("Rejected stakeholders")
+
+    for round_number, rejected_stakeholders in summary["rejected_by_round"].items():
+        rejected_table.add_row(
+            str(round_number),
+            ", ".join(rejected_stakeholders) or "none",
+        )
+
+    console.print(rejected_table)
 
 
 @app.command("version")
