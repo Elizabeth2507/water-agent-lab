@@ -365,6 +365,24 @@ uv run water-agent-lab show-run --run-id YOUR_RUN_ID --registry outputs/my_regis
 ```markdown
 The `show-run` command displays the metadata and output files associated with one experiment run. This is useful when the registry contains many simulations or negotiation experiments.
 
+Registry records also include SHA256 hashes of the scenario config files. This helps make experiment runs reproducible, because a run can be linked not only to a config path but also to the exact config content used at the time.
+
+
+Example registry fields:
+
+```json
+{
+  "run_id": "...",
+  "command": "run-all",
+  "config_dir": "configs",
+  "config_hashes": {
+    "configs/drought_mvp.yaml": "..."
+  },
+  "outputs": {
+    "results": "outputs/results.csv"
+  }
+}
+
 
 ## Design principle
 

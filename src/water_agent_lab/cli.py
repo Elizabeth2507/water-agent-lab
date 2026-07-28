@@ -38,6 +38,7 @@ from water_agent_lab.experiment_registry import (
     find_experiment_record,
     load_experiment_registry,
 )
+from water_agent_lab.hashing import compute_config_hashes, compute_file_sha256
 
 
 app = typer.Typer(
@@ -217,6 +218,7 @@ def run_all(
     run_metadata = create_run_metadata(command="run-all")
 
     config_paths = sorted(config_dir.glob("*.yaml"))
+    config_hashes = compute_config_hashes(config_paths)
 
     scenarios = [
         (config_path, load_scenario_config(config_path)) for config_path in config_paths
@@ -295,6 +297,7 @@ def run_all(
                 **run_metadata,
                 "status": "completed",
                 "config_dir": str(config_dir),
+                "config_hashes": config_hashes,
                 "outputs": {
                     "results": str(output),
                 },
@@ -624,6 +627,8 @@ def negotiate_multi(
     console.print(f"Rounds used: {result.rounds_used}/{result.max_rounds}")
     console.print(f"Final agreement reached: {result.agreement_reached}")
 
+    config_hash = compute_file_sha256(config)
+
     if output is not None:
         if output.suffix != ".json":
             raise typer.BadParameter("Negotiation history output must end with .json.")
@@ -639,6 +644,7 @@ def negotiate_multi(
                 **run_metadata,
                 "status": "completed",
                 "config_path": str(config),
+                "config_hash": config_hash,
                 "initial_strategy": strategy,
                 "outputs": {
                     "negotiation_history": str(output),
