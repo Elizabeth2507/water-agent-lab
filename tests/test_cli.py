@@ -877,3 +877,39 @@ def test_generate_run_report_fails_for_missing_run_id(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_dashboard_command_with_custom_registry(tmp_path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+
+    registry_path.write_text(
+        (
+            '{"run_id": "run-1", '
+            '"created_at_utc": "2026-01-01T00:00:00+00:00", '
+            '"command": "run-all", '
+            '"status": "completed", '
+            '"outputs": {"results": "outputs/results.csv"}}\n'
+            '{"run_id": "run-2", '
+            '"created_at_utc": "2026-01-01T01:00:00+00:00", '
+            '"command": "negotiate-multi", '
+            '"status": "completed", '
+            '"outputs": {"negotiation_history": "outputs/history.json"}}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "dashboard",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "WaterAgentLab Experiment Dashboard" in result.stdout
+    assert "Runs by Command" in result.stdout
+    assert "Outputs by Type" in result.stdout
+    assert "run-all" in result.stdout
+    assert "negotiate-multi" in result.stdout

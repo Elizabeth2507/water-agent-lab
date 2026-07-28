@@ -46,6 +46,7 @@ from water_agent_lab.reproduction import (
     get_reproduced_output_path,
 )
 from water_agent_lab.run_comparison import compare_output_files
+from water_agent_lab.dashboard import summarize_registry
 
 
 app = typer.Typer(
@@ -1222,6 +1223,61 @@ def generate_run_report(
     console.print(
         f"[green]Recorded report generation run: {run_metadata['run_id']}[/green]"
     )
+
+
+@app.command("dashboard")
+def dashboard(
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
+    """
+    Show a dashboard summary of recorded experiment runs.
+    """
+    records = load_experiment_registry(registry_path=registry)
+    summary = summarize_registry(records)
+
+    overview_table = Table(title="WaterAgentLab Experiment Dashboard")
+    overview_table.add_column("Field")
+    overview_table.add_column("Value")
+
+    overview_table.add_row("Registry", str(registry))
+    overview_table.add_row("Total runs", str(summary["total_runs"]))
+    overview_table.add_row("Reproduced runs", str(summary["reproduced_runs"]))
+
+    latest_run = summary["latest_run"]
+
+    if latest_run is not None:
+        overview_table.add_row("Latest run ID", str(latest_run.get("run_id", "")))
+        overview_table.add_row("Latest command", str(latest_run.get("command", "")))
+        overview_table.add_row(
+            "Latest created at UTC",
+            str(latest_run.get("created_at_utc", "")),
+        )
+
+    console.print(overview_table)
+
+    command_table = Table(title="Runs by Command")
+    command_table.add_column("Command")
+    command_table.add_column("Count")
+
+    for command, count in sorted(summary["command_counts"].items()):
+        command_table.add_row(str(command), str(count))
+
+    console.print(command_table)
+
+    output_table = Table(title="Outputs by Type")
+    output_table.add_column("Output type")
+    output_table.add_column("Count")
+
+    for output_name, count in sorted(summary["output_counts"].items()):
+        output_table.add_row(str(output_name), str(count))
+
+    console.print(output_table)
 
 
 @app.command("version")

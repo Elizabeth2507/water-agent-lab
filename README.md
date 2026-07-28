@@ -32,6 +32,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Structured JSON logging for simulation and negotiation runs
 - Run metadata with unique run IDs and UTC timestamps
 - Lightweight experiment registry for tracking exported runs
+- Terminal dashboard for experiment registry summaries
 
 ## Planned extensions
 
@@ -405,11 +406,26 @@ Compare an original run with a reproduced run:
 uv run water-agent-lab compare-runs --run-id ORIGINAL_RUN_ID --reproduced-run-id REPRODUCED_RUN_ID --registry outputs/my_registry.jsonl
 ```
 
+Show a dashboard summary of recorded runs:
+
+```bash
+uv run water-agent-lab dashboard --registry outputs/my_registry.jsonl
+```
+
+
+## Experiment report
 
 Generate a Markdown experiment report:
 
 ```bash
 uv run water-agent-lab generate-report --input outputs/results.csv --output docs/experiment_report.md
+```
+
+
+Generate a report from a recorded `run-all` experiment:
+
+```bash
+uv run water-agent-lab generate-run-report --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl --output docs/experiment_report.md
 ```
 
 
