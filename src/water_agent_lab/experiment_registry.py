@@ -43,3 +43,21 @@ def load_experiment_registry(
             records.append(json.loads(line))
 
     return records
+
+
+def find_experiment_record(
+    run_id: str,
+    registry_path: str | Path = DEFAULT_REGISTRY_PATH,
+) -> dict[str, Any] | None:
+    """
+    Find one experiment record by run ID.
+
+    Returns None if the run ID is not found.
+    """
+    records = load_experiment_registry(registry_path=registry_path)
+
+    for record in records:
+        if record.get("run_id") == run_id:
+            return record
+
+    return None

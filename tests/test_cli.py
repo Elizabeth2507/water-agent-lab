@@ -553,3 +553,54 @@ def test_negotiate_multi_writes_to_custom_registry(tmp_path: Path) -> None:
     assert Path(registry_entry["config_path"]) == Path("configs/drought_mvp.yaml")
     assert registry_entry["initial_strategy"] == "proportional"
     assert Path(registry_entry["outputs"]["negotiation_history"]) == output_path
+
+
+def test_show_run_command_with_custom_registry(tmp_path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+
+    registry_path.write_text(
+        (
+            '{"run_id": "test-run-id", '
+            '"created_at_utc": "2026-01-01T00:00:00+00:00", '
+            '"command": "run-all", '
+            '"status": "completed", '
+            '"outputs": {"results": "outputs/results.csv"}}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "show-run",
+            "--run-id",
+            "test-run-id",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Experiment Run" in result.stdout
+    assert "Run Outputs" in result.stdout
+    assert "test-run-id" in result.stdout
+    assert "run-all" in result.stdout
+
+
+def test_show_run_command_fails_for_missing_run_id(tmp_path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+
+    registry_path.write_text("", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "show-run",
+            "--run-id",
+            "missing-run",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code != 0

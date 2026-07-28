@@ -35,6 +35,7 @@ from water_agent_lab.logging_utils import configure_logging, log_event
 from water_agent_lab.run_metadata import create_run_metadata
 from water_agent_lab.experiment_registry import (
     append_experiment_record,
+    find_experiment_record,
     load_experiment_registry,
 )
 
@@ -744,6 +745,65 @@ def list_runs(
         )
 
     console.print(table)
+
+
+@app.command("show-run")
+def show_run(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Run ID to inspect.",
+        ),
+    ],
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
+    """
+    Show details for one recorded experiment run.
+    """
+    record = find_experiment_record(
+        run_id=run_id,
+        registry_path=registry,
+    )
+
+    if record is None:
+        raise typer.BadParameter(f"Run ID not found: {run_id}")
+
+    table = Table(title="Experiment Run")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    for key, value in record.items():
+        if key == "outputs":
+            continue
+
+        table.add_row(
+            str(key),
+            str(value),
+        )
+
+    console.print(table)
+
+    outputs = record.get("outputs", {})
+
+    output_table = Table(title="Run Outputs")
+    output_table.add_column("Name")
+    output_table.add_column("Path")
+
+    for name, path in outputs.items():
+        output_table.add_row(
+            str(name),
+            str(path),
+        )
+
+    console.print(output_table)
 
 
 @app.command("version")

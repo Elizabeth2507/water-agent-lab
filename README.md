@@ -356,6 +356,16 @@ List runs from a custom registry:
 uv run water-agent-lab list-runs --registry outputs/my_registry.jsonl
 ```
 
+Show details for one recorded run:
+
+```bash
+uv run water-agent-lab show-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+```
+
+```markdown
+The `show-run` command displays the metadata and output files associated with one experiment run. This is useful when the registry contains many simulations or negotiation experiments.
+
+
 ## Design principle
 
 WaterAgentLab separates responsibilities across modules:
