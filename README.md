@@ -382,7 +382,13 @@ Example registry fields:
     "results": "outputs/results.csv"
   }
 }
+```
 
+Verify whether the current config files still match a recorded run:
+
+```bash
+uv run water-agent-lab verify-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+```
 
 ## Design principle
 

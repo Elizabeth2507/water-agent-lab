@@ -37,6 +37,7 @@ from water_agent_lab.experiment_registry import (
     append_experiment_record,
     find_experiment_record,
     load_experiment_registry,
+    verify_experiment_record_configs,
 )
 from water_agent_lab.hashing import compute_config_hashes, compute_file_sha256
 
@@ -810,6 +811,66 @@ def show_run(
         )
 
     console.print(output_table)
+
+
+@app.command("verify-run")
+def verify_run(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Run ID to verify.",
+        ),
+    ],
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
+    """
+    Verify whether current config files match the hashes recorded for a run.
+    """
+    record = find_experiment_record(
+        run_id=run_id,
+        registry_path=registry,
+    )
+
+    if record is None:
+        raise typer.BadParameter(f"Run ID not found: {run_id}")
+
+    verification_results = verify_experiment_record_configs(record)
+
+    table = Table(title="Run Reproducibility Check")
+
+    table.add_column("Config path")
+    table.add_column("Status")
+    table.add_column("Matches")
+    table.add_column("Expected hash")
+    table.add_column("Current hash")
+
+    for result in verification_results:
+        expected_hash = str(result["expected_hash"])
+        current_hash = result["current_hash"]
+
+        table.add_row(
+            str(result["config_path"]),
+            str(result["status"]),
+            str(result["matches"]),
+            expected_hash[:12],
+            str(current_hash)[:12] if current_hash is not None else "none",
+        )
+
+    console.print(table)
+
+    if verification_results and all(
+        result["matches"] for result in verification_results
+    ):
+        console.print("[green]All config files match recorded hashes.[/green]")
+    else:
+        console.print("[red]Some config files do not match recorded hashes.[/red]")
 
 
 @app.command("version")

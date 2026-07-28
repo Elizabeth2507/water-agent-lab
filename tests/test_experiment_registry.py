@@ -4,6 +4,7 @@ from water_agent_lab.experiment_registry import (
     append_experiment_record,
     find_experiment_record,
     load_experiment_registry,
+    verify_experiment_record_configs,
 )
 
 
@@ -103,3 +104,75 @@ def test_find_experiment_record_returns_none_for_missing_run_id(
     )
 
     assert record is None
+
+
+def test_verify_experiment_record_configs_matches_current_file(
+    tmp_path: Path,
+) -> None:
+    config_path = tmp_path / "scenario.yaml"
+    config_path.write_text("available_water: 100\n", encoding="utf-8")
+
+    from water_agent_lab.hashing import compute_file_sha256
+
+    config_hash = compute_file_sha256(config_path)
+
+    record = {
+        "run_id": "test-run-id",
+        "command": "negotiate-multi",
+        "config_path": str(config_path),
+        "config_hash": config_hash,
+    }
+
+    results = verify_experiment_record_configs(record)
+
+    assert len(results) == 1
+    assert results[0]["config_path"] == str(config_path)
+    assert results[0]["status"] == "checked"
+    assert results[0]["matches"] is True
+
+
+def test_verify_experiment_record_configs_detects_changed_file(
+    tmp_path: Path,
+) -> None:
+    config_path = tmp_path / "scenario.yaml"
+    config_path.write_text("available_water: 100\n", encoding="utf-8")
+
+    from water_agent_lab.hashing import compute_file_sha256
+
+    original_hash = compute_file_sha256(config_path)
+
+    config_path.write_text("available_water: 80\n", encoding="utf-8")
+
+    record = {
+        "run_id": "test-run-id",
+        "command": "negotiate-multi",
+        "config_path": str(config_path),
+        "config_hash": original_hash,
+    }
+
+    results = verify_experiment_record_configs(record)
+
+    assert len(results) == 1
+    assert results[0]["status"] == "checked"
+    assert results[0]["matches"] is False
+    assert results[0]["expected_hash"] != results[0]["current_hash"]
+
+
+def test_verify_experiment_record_configs_detects_missing_file(
+    tmp_path: Path,
+) -> None:
+    config_path = tmp_path / "missing.yaml"
+
+    record = {
+        "run_id": "test-run-id",
+        "command": "negotiate-multi",
+        "config_path": str(config_path),
+        "config_hash": "expected-hash",
+    }
+
+    results = verify_experiment_record_configs(record)
+
+    assert len(results) == 1
+    assert results[0]["status"] == "missing"
+    assert results[0]["matches"] is False
+    assert results[0]["current_hash"] is None

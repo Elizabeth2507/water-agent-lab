@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any
+from water_agent_lab.hashing import compute_file_sha256
 
 
 DEFAULT_REGISTRY_PATH = Path("outputs/experiment_registry.jsonl")
@@ -61,3 +62,73 @@ def find_experiment_record(
             return record
 
     return None
+
+
+def verify_experiment_record_configs(
+    record: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """
+    Verify whether the current config files still match the hashes
+    recorded in an experiment registry record.
+    """
+    verification_results = []
+
+    if "config_hash" in record and "config_path" in record:
+        config_path = Path(record["config_path"])
+        expected_hash = record["config_hash"]
+
+        if not config_path.exists():
+            verification_results.append(
+                {
+                    "config_path": str(config_path),
+                    "status": "missing",
+                    "expected_hash": expected_hash,
+                    "current_hash": None,
+                    "matches": False,
+                }
+            )
+            return verification_results
+
+        current_hash = compute_file_sha256(config_path)
+
+        verification_results.append(
+            {
+                "config_path": str(config_path),
+                "status": "checked",
+                "expected_hash": expected_hash,
+                "current_hash": current_hash,
+                "matches": current_hash == expected_hash,
+            }
+        )
+
+        return verification_results
+
+    if "config_hashes" in record:
+        for config_path_text, expected_hash in record["config_hashes"].items():
+            config_path = Path(config_path_text)
+
+            if not config_path.exists():
+                verification_results.append(
+                    {
+                        "config_path": str(config_path),
+                        "status": "missing",
+                        "expected_hash": expected_hash,
+                        "current_hash": None,
+                        "matches": False,
+                    }
+                )
+                continue
+
+            current_hash = compute_file_sha256(config_path)
+
+            verification_results.append(
+                {
+                    "config_path": str(config_path),
+                    "status": "checked",
+                    "expected_hash": expected_hash,
+                    "current_hash": current_hash,
+                    "matches": current_hash == expected_hash,
+                }
+            )
+
+    return verification_results

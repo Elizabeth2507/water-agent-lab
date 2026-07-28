@@ -604,3 +604,63 @@ def test_show_run_command_fails_for_missing_run_id(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_verify_run_command_with_matching_config_hash(tmp_path) -> None:
+    import json
+
+    from water_agent_lab.hashing import compute_file_sha256
+
+    config_path = tmp_path / "scenario.yaml"
+    registry_path = tmp_path / "registry.jsonl"
+
+    config_path.write_text("available_water: 100\n", encoding="utf-8")
+
+    config_hash = compute_file_sha256(config_path)
+
+    record = {
+        "run_id": "test-run-id",
+        "created_at_utc": "2026-01-01T00:00:00+00:00",
+        "command": "negotiate-multi",
+        "status": "completed",
+        "config_path": str(config_path),
+        "config_hash": config_hash,
+        "outputs": {
+            "negotiation_history": "outputs/history.json",
+        },
+    }
+
+    registry_path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "verify-run",
+            "--run-id",
+            "test-run-id",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Run Reproducibility Check" in result.stdout
+    assert "All config files match" in result.stdout
+
+
+def test_verify_run_command_fails_for_missing_run_id(tmp_path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+    registry_path.write_text("", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "verify-run",
+            "--run-id",
+            "missing-run",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code != 0
