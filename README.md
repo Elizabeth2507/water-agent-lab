@@ -399,6 +399,12 @@ uv run water-agent-lab reproduce-run --run-id YOUR_RUN_ID --registry outputs/my_
 The `reproduce-run` command verifies that config hashes still match before re-running the recorded experiment. It then writes a new output file and records the reproduced run in the registry with a `reproduced_from_run_id` field.
 
 
+Compare an original run with a reproduced run:
+
+```bash
+uv run water-agent-lab compare-runs --run-id ORIGINAL_RUN_ID --reproduced-run-id REPRODUCED_RUN_ID --registry outputs/my_registry.jsonl
+```
+
 ## Design principle
 
 WaterAgentLab separates responsibilities across modules:

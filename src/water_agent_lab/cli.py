@@ -45,6 +45,7 @@ from water_agent_lab.reproduction import (
     ensure_record_is_reproducible,
     get_reproduced_output_path,
 )
+from water_agent_lab.run_comparison import compare_output_files
 
 
 app = typer.Typer(
@@ -123,6 +124,24 @@ def build_run_all_rows(
             )
 
     return rows
+
+
+def get_primary_output_path(record: dict[str, object]) -> str:
+    """
+    Return the main output path for a registry record.
+    """
+    outputs = record.get("outputs", {})
+
+    if not isinstance(outputs, dict):
+        raise ValueError("Run record does not contain valid outputs.")
+
+    if "results" in outputs:
+        return str(outputs["results"])
+
+    if "negotiation_history" in outputs:
+        return str(outputs["negotiation_history"])
+
+    raise ValueError("Run record does not contain a supported output file.")
 
 
 @app.command("simulate")
@@ -1031,6 +1050,76 @@ def reproduce_run(
         return
 
     raise typer.BadParameter(f"Reproduction is not supported for command: {command}")
+
+
+@app.command("compare-runs")
+def compare_runs(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Original run ID.",
+        ),
+    ],
+    reproduced_run_id: Annotated[
+        str,
+        typer.Option(
+            "--reproduced-run-id",
+            help="Reproduced run ID.",
+        ),
+    ],
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
+    """
+    Compare outputs from an original run and a reproduced run.
+    """
+    original_record = find_experiment_record(
+        run_id=run_id,
+        registry_path=registry,
+    )
+    reproduced_record = find_experiment_record(
+        run_id=reproduced_run_id,
+        registry_path=registry,
+    )
+
+    if original_record is None:
+        raise typer.BadParameter(f"Original run ID not found: {run_id}")
+
+    if reproduced_record is None:
+        raise typer.BadParameter(f"Reproduced run ID not found: {reproduced_run_id}")
+
+    original_output = get_primary_output_path(original_record)
+    reproduced_output = get_primary_output_path(reproduced_record)
+
+    comparison = compare_output_files(
+        original_path=original_output,
+        reproduced_path=reproduced_output,
+    )
+
+    table = Table(title="Run Comparison")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Original run ID", run_id)
+    table.add_row("Reproduced run ID", reproduced_run_id)
+    table.add_row("Original output", comparison["original_path"])
+    table.add_row("Reproduced output", comparison["reproduced_path"])
+    table.add_row("Matches", str(comparison["matches"]))
+    table.add_row("Reason", comparison["reason"])
+
+    console.print(table)
+
+    if comparison["matches"]:
+        console.print("[green]Reproduced output matches original output.[/green]")
+    else:
+        console.print("[red]Reproduced output differs from original output.[/red]")
 
 
 @app.command("version")

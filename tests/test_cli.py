@@ -733,3 +733,67 @@ def test_reproduce_run_fails_for_missing_run_id(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_compare_runs_command_for_reproduced_run_all(tmp_path) -> None:
+    import json
+
+    output_path = tmp_path / "results.csv"
+    registry_path = tmp_path / "registry.jsonl"
+
+    create_result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(output_path),
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert create_result.exit_code == 0
+
+    records = [
+        json.loads(line)
+        for line in registry_path.read_text(encoding="utf-8").splitlines()
+    ]
+    original_run_id = records[0]["run_id"]
+
+    reproduce_result = runner.invoke(
+        app,
+        [
+            "reproduce-run",
+            "--run-id",
+            original_run_id,
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert reproduce_result.exit_code == 0
+
+    updated_records = [
+        json.loads(line)
+        for line in registry_path.read_text(encoding="utf-8").splitlines()
+    ]
+    reproduced_run_id = updated_records[1]["run_id"]
+
+    compare_result = runner.invoke(
+        app,
+        [
+            "compare-runs",
+            "--run-id",
+            original_run_id,
+            "--reproduced-run-id",
+            reproduced_run_id,
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert compare_result.exit_code == 0
+    assert "Run Comparison" in compare_result.stdout
+    assert "Reproduced output matches original output" in compare_result.stdout
