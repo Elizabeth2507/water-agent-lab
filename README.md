@@ -31,6 +31,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Negotiation history summarization
 - Structured JSON logging for simulation and negotiation runs
 - Run metadata with unique run IDs and UTC timestamps
+- Lightweight experiment registry for tracking exported runs
 
 ## Planned extensions
 
@@ -324,6 +325,25 @@ This makes it easier to connect logs, exported results, and negotiation history 
 
 Batch scenario exports also include run metadata, so every CSV or JSON row can be traced back to the experiment run that produced it.
 
+
+## Experiment registry
+
+WaterAgentLab records exported experiment runs in a lightweight JSONL registry.
+
+The registry stores run metadata, command name, status, and output paths. This makes it easier to trace which command produced which result file.
+
+List recorded runs:
+
+```bash
+uv run water-agent-lab list-runs
+```
+
+```markdown
+By default, records are saved to:
+
+```text
+outputs/experiment_registry.jsonl
+```
 
 ## Design principle
 

@@ -461,3 +461,10 @@ def test_run_all_export_includes_run_metadata(tmp_path) -> None:
     assert "created_at_utc" in content
     assert "command" in content
     assert "run-all" in content
+
+
+def test_list_runs_command() -> None:
+    result = runner.invoke(app, ["list-runs"])
+
+    assert result.exit_code == 0
+    assert "Experiment Registry" in result.stdout

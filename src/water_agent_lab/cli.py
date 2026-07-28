@@ -33,6 +33,10 @@ from water_agent_lab.negotiation_summary import (
 )
 from water_agent_lab.logging_utils import configure_logging, log_event
 from water_agent_lab.run_metadata import create_run_metadata
+from water_agent_lab.experiment_registry import (
+    append_experiment_record,
+    load_experiment_registry,
+)
 
 
 app = typer.Typer(
@@ -278,6 +282,17 @@ def run_all(
             save_results_json(rows, output)
         else:
             raise typer.BadParameter("Output file must end with .csv or .json.")
+
+        append_experiment_record(
+            {
+                **run_metadata,
+                "status": "completed",
+                "config_dir": str(config_dir),
+                "outputs": {
+                    "results": str(output),
+                },
+            }
+        )
 
         console.print(f"[green]Saved results to {output}[/green]")
 
@@ -603,6 +618,18 @@ def negotiate_multi(
             output_path=output,
             run_metadata=run_metadata,
         )
+
+        append_experiment_record(
+            {
+                **run_metadata,
+                "status": "completed",
+                "config_path": str(config),
+                "initial_strategy": strategy,
+                "outputs": {
+                    "negotiation_history": str(output),
+                },
+            }
+        )
         console.print(f"[green]Saved negotiation history to {output}[/green]")
 
 
@@ -663,6 +690,36 @@ def summarize_negotiation(
         )
 
     console.print(rejected_table)
+
+
+@app.command("list-runs")
+def list_runs() -> None:
+    """
+    List recorded experiment runs.
+    """
+    records = load_experiment_registry()
+
+    table = Table(title="Experiment Registry")
+
+    table.add_column("Run ID")
+    table.add_column("Created at UTC")
+    table.add_column("Command")
+    table.add_column("Status")
+    table.add_column("Outputs")
+
+    for record in records:
+        outputs = record.get("outputs", {})
+        output_text = ", ".join(f"{name}: {path}" for name, path in outputs.items())
+
+        table.add_row(
+            str(record.get("run_id", "")),
+            str(record.get("created_at_utc", "")),
+            str(record.get("command", "")),
+            str(record.get("status", "")),
+            output_text,
+        )
+
+    console.print(table)
 
 
 @app.command("version")
