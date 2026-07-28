@@ -191,8 +191,7 @@ def run_all(
         Path,
         typer.Option(
             "--config-dir",
-            "-d",
-            help="Directory containing drought scenario YAML files.",
+            help="Directory containing scenario YAML configs.",
         ),
     ] = Path("configs"),
     output: Annotated[
@@ -200,9 +199,16 @@ def run_all(
         typer.Option(
             "--output",
             "-o",
-            help="Optional path to save results as .csv or .json.",
+            help="Optional path to save results as CSV or JSON.",
         ),
     ] = None,
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
 ) -> None:
     """
     Run all scenario configs with all available allocation strategies.
@@ -291,7 +297,8 @@ def run_all(
                 "outputs": {
                     "results": str(output),
                 },
-            }
+            },
+            registry_path=registry,
         )
 
         console.print(f"[green]Saved results to {output}[/green]")
@@ -538,6 +545,13 @@ def negotiate_multi(
             help="Optional path to save structured JSON logs.",
         ),
     ] = None,
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
 ) -> None:
     """
     Run a multi-round rule-based negotiation process.
@@ -628,7 +642,8 @@ def negotiate_multi(
                 "outputs": {
                     "negotiation_history": str(output),
                 },
-            }
+            },
+            registry_path=registry,
         )
         console.print(f"[green]Saved negotiation history to {output}[/green]")
 
@@ -693,11 +708,20 @@ def summarize_negotiation(
 
 
 @app.command("list-runs")
-def list_runs() -> None:
+def list_runs(
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
     """
     List recorded experiment runs.
     """
-    records = load_experiment_registry()
+    # records = load_experiment_registry()
+    records = load_experiment_registry(registry_path=registry)
 
     table = Table(title="Experiment Registry")
 

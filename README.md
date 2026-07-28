@@ -338,11 +338,22 @@ List recorded runs:
 uv run water-agent-lab list-runs
 ```
 
-```markdown
+
 By default, records are saved to:
 
 ```text
 outputs/experiment_registry.jsonl
+```
+
+You can choose a custom registry path:
+```bash
+uv run water-agent-lab run-all --config-dir configs --output outputs/results.csv --registry outputs/my_registry.jsonl
+```
+
+List runs from a custom registry:
+
+```bash
+uv run water-agent-lab list-runs --registry outputs/my_registry.jsonl
 ```
 
 ## Design principle

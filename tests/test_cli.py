@@ -463,8 +463,93 @@ def test_run_all_export_includes_run_metadata(tmp_path) -> None:
     assert "run-all" in content
 
 
-def test_list_runs_command() -> None:
-    result = runner.invoke(app, ["list-runs"])
+def test_list_runs_command_with_custom_registry(tmp_path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+
+    registry_path.write_text(
+        (
+            '{"run_id": "test-run-id", '
+            '"created_at_utc": "2026-01-01T00:00:00+00:00", '
+            '"command": "run-all", '
+            '"status": "completed", '
+            '"outputs": {"results": "outputs/results.csv"}}\n'
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "list-runs",
+            "--registry",
+            str(registry_path),
+        ],
+    )
 
     assert result.exit_code == 0
     assert "Experiment Registry" in result.stdout
+    assert "test-run-id" in result.stdout
+    assert "run-all" in result.stdout
+
+
+def test_run_all_writes_to_custom_registry(tmp_path: Path) -> None:
+    output_path = tmp_path / "results.csv"
+    registry_path = tmp_path / "registry.jsonl"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(output_path),
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert registry_path.exists()
+
+    registry_lines = registry_path.read_text(encoding="utf-8").splitlines()
+    registry_entry = json.loads(registry_lines[0])
+
+    assert registry_entry["command"] == "run-all"
+    assert registry_entry["status"] == "completed"
+    assert registry_entry["config_dir"] == "configs"
+    assert Path(registry_entry["outputs"]["results"]) == output_path
+
+
+def test_negotiate_multi_writes_to_custom_registry(tmp_path: Path) -> None:
+    output_path = tmp_path / "negotiation_history.json"
+    registry_path = tmp_path / "registry.jsonl"
+
+    result = runner.invoke(
+        app,
+        [
+            "negotiate-multi",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(output_path),
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert registry_path.exists()
+
+    registry_lines = registry_path.read_text(encoding="utf-8").splitlines()
+    registry_entry = json.loads(registry_lines[0])
+
+    assert registry_entry["command"] == "negotiate-multi"
+    assert registry_entry["status"] == "completed"
+    assert Path(registry_entry["config_path"]) == Path("configs/drought_mvp.yaml")
+    assert registry_entry["initial_strategy"] == "proportional"
+    assert Path(registry_entry["outputs"]["negotiation_history"]) == output_path
