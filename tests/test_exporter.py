@@ -45,3 +45,28 @@ def test_save_results_json(tmp_path: Path) -> None:
     assert output_path.exists()
     assert content[0]["scenario_name"] == "mild_drought"
     assert content[0]["strategy"] == "proportional"
+
+
+def test_save_results_csv_preserves_run_metadata(tmp_path: Path) -> None:
+    output_path = tmp_path / "results.csv"
+
+    results = [
+        {
+            "run_id": "test-run-id",
+            "created_at_utc": "2026-01-01T00:00:00+00:00",
+            "command": "run-all",
+            "scenario_name": "mild_drought",
+            "strategy": "proportional",
+            "fairness_score": 0.9,
+            "conflict_score": 0.0,
+        }
+    ]
+
+    save_results_csv(results, output_path)
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "run_id" in content
+    assert "test-run-id" in content
+    assert "created_at_utc" in content
+    assert "run-all" in content

@@ -436,3 +436,28 @@ def test_negotiate_multi_command_with_log_file(tmp_path) -> None:
     assert "negotiation_started" in log_content
     assert "negotiation_completed" in log_content
     assert "negotiation_round_completed" in log_content
+
+
+def test_run_all_export_includes_run_metadata(tmp_path) -> None:
+    output_path = tmp_path / "results.csv"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "run_id" in content
+    assert "created_at_utc" in content
+    assert "command" in content
+    assert "run-all" in content

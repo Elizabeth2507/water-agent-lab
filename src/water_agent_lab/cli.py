@@ -203,6 +203,8 @@ def run_all(
     """
     Run all scenario configs with all available allocation strategies.
     """
+    run_metadata = create_run_metadata(command="run-all")
+
     config_paths = sorted(config_dir.glob("*.yaml"))
 
     scenarios = [
@@ -238,6 +240,7 @@ def run_all(
             result = evaluate_proposal(scenario, proposal)
 
             row = {
+                **run_metadata,
                 "scenario_name": result.scenario_name,
                 "drought_level": result.drought_level,
                 "available_water": result.available_water,
@@ -247,9 +250,9 @@ def run_all(
                 "water_budget_valid": result.water_budget_valid,
                 "fairness_score": result.fairness_score,
                 "conflict_score": result.conflict_score,
-                "agreement_reached": result.agreement_reached,
                 "minimum_satisfaction_score": result.minimum_satisfaction_score,
                 "shortage_score": result.shortage_score,
+                "agreement_reached": result.agreement_reached,
             }
             rows.append(row)
 
@@ -266,6 +269,7 @@ def run_all(
             )
 
     console.print(table)
+    console.print(f"Run ID: {run_metadata['run_id']}")
 
     if output is not None:
         if output.suffix == ".csv":
@@ -594,7 +598,11 @@ def negotiate_multi(
         if output.suffix != ".json":
             raise typer.BadParameter("Negotiation history output must end with .json.")
 
-        save_negotiation_history_json(result=result, output_path=output)
+        save_negotiation_history_json(
+            result=result,
+            output_path=output,
+            run_metadata=run_metadata,
+        )
         console.print(f"[green]Saved negotiation history to {output}[/green]")
 
 

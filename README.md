@@ -89,7 +89,7 @@ Run the minimum-priority baseline:
 
 ```bash
 uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy minimum-priority
-
+```
 
 Compare available strategies:
 
@@ -117,7 +117,7 @@ uv run water-agent-lab agent-responses --config configs/drought_mvp.yaml --strat
 
 Plot fairness and conflict scores:
 
-```
+```bash
 uv run water-agent-lab plot-results --input outputs/results.csv --output outputs/fairness_conflict.png
 ```
 
@@ -314,6 +314,15 @@ This is still rule-based and deterministic, but it provides the foundation for f
 WaterAgentLab can write structured JSON logs for simulation and negotiation runs.
 
 Each log line is a JSON object containing an event name, message, level, and context fields. This makes runs easier to inspect, debug, and later connect to experiment tracking tools.
+
+
+## Run metadata
+
+Simulation and negotiation runs include metadata such as a unique `run_id`, UTC timestamp, and command name.
+
+This makes it easier to connect logs, exported results, and negotiation history files from the same experiment run.
+
+Batch scenario exports also include run metadata, so every CSV or JSON row can be traced back to the experiment run that produced it.
 
 
 ## Design principle
