@@ -122,7 +122,7 @@ def test_run_all_command() -> None:
     assert "All Scenario Strategy Comparison" in result.stdout
 
 
-def test_run_all_command_with_csv_output(tmp_path) -> None:
+def test_run_all_command_with_csv_output(tmp_path: Path) -> None:
     output_path = tmp_path / "results.csv"
 
     result = runner.invoke(
@@ -141,7 +141,7 @@ def test_run_all_command_with_csv_output(tmp_path) -> None:
     assert "Saved results" in result.stdout
 
 
-def test_plot_results_command(tmp_path) -> None:
+def test_plot_results_command(tmp_path: Path) -> None:
     input_path = tmp_path / "results.csv"
     output_path = tmp_path / "plot.png"
 
@@ -333,7 +333,7 @@ def test_negotiate_multi_command() -> None:
     assert "Final agreement reached" in result.stdout
 
 
-def test_negotiate_multi_command_with_json_output(tmp_path) -> None:
+def test_negotiate_multi_command_with_json_output(tmp_path: Path) -> None:
     output_path = tmp_path / "negotiation_history.json"
 
     result = runner.invoke(
@@ -354,7 +354,7 @@ def test_negotiate_multi_command_with_json_output(tmp_path) -> None:
     assert "Saved negotiation history" in result.stdout
 
 
-def test_summarize_negotiation_command(tmp_path) -> None:
+def test_summarize_negotiation_command(tmp_path: Path) -> None:
     output_path = tmp_path / "negotiation_history.json"
 
     create_result = runner.invoke(
@@ -387,7 +387,7 @@ def test_summarize_negotiation_command(tmp_path) -> None:
     assert "Rejected Stakeholders by Round" in summary_result.stdout
 
 
-def test_simulate_command_with_log_file(tmp_path) -> None:
+def test_simulate_command_with_log_file(tmp_path: Path) -> None:
     log_path = tmp_path / "simulation.log"
 
     result = runner.invoke(
@@ -412,7 +412,7 @@ def test_simulate_command_with_log_file(tmp_path) -> None:
     assert "simulation_completed" in log_content
 
 
-def test_negotiate_multi_command_with_log_file(tmp_path) -> None:
+def test_negotiate_multi_command_with_log_file(tmp_path: Path) -> None:
     log_path = tmp_path / "negotiation.log"
 
     result = runner.invoke(
@@ -438,7 +438,7 @@ def test_negotiate_multi_command_with_log_file(tmp_path) -> None:
     assert "negotiation_round_completed" in log_content
 
 
-def test_run_all_export_includes_run_metadata(tmp_path) -> None:
+def test_run_all_export_includes_run_metadata(tmp_path: Path) -> None:
     output_path = tmp_path / "results.csv"
 
     result = runner.invoke(
@@ -463,7 +463,7 @@ def test_run_all_export_includes_run_metadata(tmp_path) -> None:
     assert "run-all" in content
 
 
-def test_list_runs_command_with_custom_registry(tmp_path) -> None:
+def test_list_runs_command_with_custom_registry(tmp_path: Path) -> None:
     registry_path = tmp_path / "registry.jsonl"
 
     registry_path.write_text(
@@ -555,7 +555,7 @@ def test_negotiate_multi_writes_to_custom_registry(tmp_path: Path) -> None:
     assert Path(registry_entry["outputs"]["negotiation_history"]) == output_path
 
 
-def test_show_run_command_with_custom_registry(tmp_path) -> None:
+def test_show_run_command_with_custom_registry(tmp_path: Path) -> None:
     registry_path = tmp_path / "registry.jsonl"
 
     registry_path.write_text(
@@ -587,7 +587,7 @@ def test_show_run_command_with_custom_registry(tmp_path) -> None:
     assert "run-all" in result.stdout
 
 
-def test_show_run_command_fails_for_missing_run_id(tmp_path) -> None:
+def test_show_run_command_fails_for_missing_run_id(tmp_path: Path) -> None:
     registry_path = tmp_path / "registry.jsonl"
 
     registry_path.write_text("", encoding="utf-8")
@@ -606,7 +606,7 @@ def test_show_run_command_fails_for_missing_run_id(tmp_path) -> None:
     assert result.exit_code != 0
 
 
-def test_verify_run_command_with_matching_config_hash(tmp_path) -> None:
+def test_verify_run_command_with_matching_config_hash(tmp_path: Path) -> None:
     import json
 
     from water_agent_lab.hashing import compute_file_sha256
@@ -648,7 +648,7 @@ def test_verify_run_command_with_matching_config_hash(tmp_path) -> None:
     assert "All config files match" in result.stdout
 
 
-def test_verify_run_command_fails_for_missing_run_id(tmp_path) -> None:
+def test_verify_run_command_fails_for_missing_run_id(tmp_path: Path) -> None:
     registry_path = tmp_path / "registry.jsonl"
     registry_path.write_text("", encoding="utf-8")
 
@@ -656,6 +656,75 @@ def test_verify_run_command_fails_for_missing_run_id(tmp_path) -> None:
         app,
         [
             "verify-run",
+            "--run-id",
+            "missing-run",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_reproduce_run_for_run_all(tmp_path: Path) -> None:
+    output_path = tmp_path / "results.csv"
+    registry_path = tmp_path / "registry.jsonl"
+
+    create_result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(output_path),
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert create_result.exit_code == 0
+
+    import json
+
+    records = [
+        json.loads(line)
+        for line in registry_path.read_text(encoding="utf-8").splitlines()
+    ]
+
+    run_id = records[0]["run_id"]
+
+    reproduce_result = runner.invoke(
+        app,
+        [
+            "reproduce-run",
+            "--run-id",
+            run_id,
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert reproduce_result.exit_code == 0
+    assert "Run is reproducible" in reproduce_result.stdout
+
+    updated_records = [
+        json.loads(line)
+        for line in registry_path.read_text(encoding="utf-8").splitlines()
+    ]
+
+    assert len(updated_records) == 2
+    assert updated_records[1]["reproduced_from_run_id"] == run_id
+
+
+def test_reproduce_run_fails_for_missing_run_id(tmp_path: Path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+    registry_path.write_text("", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "reproduce-run",
             "--run-id",
             "missing-run",
             "--registry",

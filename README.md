@@ -390,6 +390,15 @@ Verify whether the current config files still match a recorded run:
 uv run water-agent-lab verify-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
 ```
 
+Reproduce a recorded run:
+
+```bash
+uv run water-agent-lab reproduce-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+```
+
+The `reproduce-run` command verifies that config hashes still match before re-running the recorded experiment. It then writes a new output file and records the reproduced run in the registry with a `reproduced_from_run_id` field.
+
+
 ## Design principle
 
 WaterAgentLab separates responsibilities across modules:

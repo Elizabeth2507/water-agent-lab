@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Annotated
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -40,6 +41,10 @@ from water_agent_lab.experiment_registry import (
     verify_experiment_record_configs,
 )
 from water_agent_lab.hashing import compute_config_hashes, compute_file_sha256
+from water_agent_lab.reproduction import (
+    ensure_record_is_reproducible,
+    get_reproduced_output_path,
+)
 
 
 app = typer.Typer(
@@ -69,6 +74,55 @@ def run_strategy(strategy: str, config_path: Path) -> SimulationResult:
     proposal = create_proposal(strategy=strategy, scenario=scenario)
 
     return evaluate_proposal(scenario, proposal)
+
+
+def build_run_all_rows(
+    config_dir: Path,
+    run_metadata: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """
+    Build result rows for all scenario configs and all strategies.
+    """
+    config_paths = sorted(config_dir.glob("*.yaml"))
+
+    config_paths = sorted(
+        config_paths,
+        key=lambda path: drought_level_sort_key(
+            load_scenario_config(path).drought_level
+        ),
+    )
+
+    rows: list[dict[str, Any]] = []
+
+    for config_path in config_paths:
+        scenario = load_scenario_config(config_path)
+
+        for strategy in get_strategy_names():
+            proposal = create_proposal(
+                strategy=strategy,
+                scenario=scenario,
+            )
+            result = evaluate_proposal(scenario, proposal)
+
+            rows.append(
+                {
+                    **run_metadata,
+                    "scenario_name": result.scenario_name,
+                    "drought_level": result.drought_level,
+                    "available_water": result.available_water,
+                    "strategy": strategy,
+                    "total_requested": result.total_requested,
+                    "total_allocated": result.total_allocated,
+                    "water_budget_valid": result.water_budget_valid,
+                    "fairness_score": result.fairness_score,
+                    "conflict_score": result.conflict_score,
+                    "minimum_satisfaction_score": result.minimum_satisfaction_score,
+                    "shortage_score": result.shortage_score,
+                    "agreement_reached": result.agreement_reached,
+                }
+            )
+
+    return rows
 
 
 @app.command("simulate")
@@ -219,22 +273,16 @@ def run_all(
     run_metadata = create_run_metadata(command="run-all")
 
     config_paths = sorted(config_dir.glob("*.yaml"))
-    config_hashes = compute_config_hashes(config_paths)
-
-    scenarios = [
-        (config_path, load_scenario_config(config_path)) for config_path in config_paths
-    ]
-
-    scenarios = sorted(
-        scenarios,
-        key=lambda item: drought_level_sort_key(item[1].drought_level),
-    )
 
     if not config_paths:
         raise typer.BadParameter(f"No YAML config files found in: {config_dir}")
 
-    strategies = get_strategy_names()
-    rows = []
+    config_hashes = compute_config_hashes(config_paths)
+
+    rows = build_run_all_rows(
+        config_dir=config_dir,
+        run_metadata=run_metadata,
+    )
 
     table = Table(title="All Scenario Strategy Comparison")
 
@@ -248,65 +296,46 @@ def run_all(
     table.add_column("Min satisfaction")
     table.add_column("Shortage")
 
-    for _config_path, scenario in scenarios:
-        for strategy in strategies:
-            proposal = create_proposal(strategy=strategy, scenario=scenario)
-            result = evaluate_proposal(scenario, proposal)
-
-            row = {
-                **run_metadata,
-                "scenario_name": result.scenario_name,
-                "drought_level": result.drought_level,
-                "available_water": result.available_water,
-                "strategy": strategy,
-                "total_requested": result.total_requested,
-                "total_allocated": result.total_allocated,
-                "water_budget_valid": result.water_budget_valid,
-                "fairness_score": result.fairness_score,
-                "conflict_score": result.conflict_score,
-                "minimum_satisfaction_score": result.minimum_satisfaction_score,
-                "shortage_score": result.shortage_score,
-                "agreement_reached": result.agreement_reached,
-            }
-            rows.append(row)
-
-            table.add_row(
-                result.scenario_name,
-                result.drought_level,
-                f"{result.available_water:.2f}",
-                strategy,
-                f"{result.fairness_score:.3f}",
-                f"{result.conflict_score:.3f}",
-                str(result.agreement_reached),
-                f"{result.minimum_satisfaction_score:.3f}",
-                f"{result.shortage_score:.3f}",
-            )
+    for row in rows:
+        table.add_row(
+            str(row["scenario_name"]),
+            str(row["drought_level"]),
+            f"{float(row['available_water']):.2f}",
+            str(row["strategy"]),
+            f"{float(row['fairness_score']):.3f}",
+            f"{float(row['conflict_score']):.3f}",
+            str(row["agreement_reached"]),
+            f"{float(row['minimum_satisfaction_score']):.3f}",
+            f"{float(row['shortage_score']):.3f}",
+        )
 
     console.print(table)
     console.print(f"Run ID: {run_metadata['run_id']}")
 
-    if output is not None:
-        if output.suffix == ".csv":
-            save_results_csv(rows, output)
-        elif output.suffix == ".json":
-            save_results_json(rows, output)
-        else:
-            raise typer.BadParameter("Output file must end with .csv or .json.")
+    if output is None:
+        return
 
-        append_experiment_record(
-            {
-                **run_metadata,
-                "status": "completed",
-                "config_dir": str(config_dir),
-                "config_hashes": config_hashes,
-                "outputs": {
-                    "results": str(output),
-                },
+    if output.suffix == ".csv":
+        save_results_csv(rows, output)
+    elif output.suffix == ".json":
+        save_results_json(rows, output)
+    else:
+        raise typer.BadParameter("Output file must end with .csv or .json.")
+
+    append_experiment_record(
+        {
+            **run_metadata,
+            "status": "completed",
+            "config_dir": str(config_dir),
+            "config_hashes": config_hashes,
+            "outputs": {
+                "results": str(output),
             },
-            registry_path=registry,
-        )
+        },
+        registry_path=registry,
+    )
 
-        console.print(f"[green]Saved results to {output}[/green]")
+    console.print(f"[green]Saved results to {output}[/green]")
 
 
 @app.command("validate-config")
@@ -871,6 +900,137 @@ def verify_run(
         console.print("[green]All config files match recorded hashes.[/green]")
     else:
         console.print("[red]Some config files do not match recorded hashes.[/red]")
+
+
+@app.command("reproduce-run")
+def reproduce_run(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Run ID to reproduce.",
+        ),
+    ],
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
+    """
+    Reproduce a recorded experiment run if config hashes still match.
+    """
+    record = find_experiment_record(
+        run_id=run_id,
+        registry_path=registry,
+    )
+
+    if record is None:
+        raise typer.BadParameter(f"Run ID not found: {run_id}")
+
+    ensure_record_is_reproducible(record)
+
+    command = record.get("command")
+    outputs = record.get("outputs", {})
+
+    run_metadata = create_run_metadata(command=f"reproduce-{command}")
+
+    if command == "run-all":
+        original_results_path = outputs.get("results")
+
+        if original_results_path is None:
+            raise typer.BadParameter("Original run-all record has no results output.")
+
+        output_path = get_reproduced_output_path(
+            original_output_path=original_results_path,
+            new_run_id=run_metadata["run_id"],
+        )
+
+        config_dir = Path(str(record["config_dir"]))
+        rows = build_run_all_rows(
+            config_dir=config_dir,
+            run_metadata=run_metadata,
+        )
+
+        if output_path.suffix == ".csv":
+            save_results_csv(results=rows, output_path=output_path)
+        elif output_path.suffix == ".json":
+            save_results_json(results=rows, output_path=output_path)
+        else:
+            raise typer.BadParameter("Reproduced output must end with .csv or .json.")
+
+        config_paths = sorted(config_dir.glob("*.yaml"))
+        config_hashes = compute_config_hashes(config_paths)
+
+        append_experiment_record(
+            record={
+                **run_metadata,
+                "status": "completed",
+                "reproduced_from_run_id": run_id,
+                "config_dir": str(config_dir),
+                "config_hashes": config_hashes,
+                "outputs": {
+                    "results": str(output_path),
+                },
+            },
+            registry_path=registry,
+        )
+
+        console.print("[green]Run is reproducible.[/green]")
+        console.print(f"[green]Saved reproduced results to {output_path}[/green]")
+        return
+
+    if command == "negotiate-multi":
+        original_history_path = outputs.get("negotiation_history")
+
+        if original_history_path is None:
+            raise typer.BadParameter(
+                "Original negotiate-multi record has no negotiation history output."
+            )
+
+        output_path = get_reproduced_output_path(
+            original_output_path=original_history_path,
+            new_run_id=run_metadata["run_id"],
+        )
+
+        config_path = Path(str(record["config_path"]))
+        initial_strategy = str(record["initial_strategy"])
+
+        result = run_multi_round_negotiation(
+            config_path=str(config_path),
+            initial_strategy=initial_strategy,
+        )
+
+        save_negotiation_history_json(
+            result=result,
+            output_path=output_path,
+            run_metadata=run_metadata,
+        )
+
+        append_experiment_record(
+            record={
+                **run_metadata,
+                "status": "completed",
+                "reproduced_from_run_id": run_id,
+                "config_path": str(config_path),
+                "config_hash": compute_file_sha256(config_path),
+                "initial_strategy": initial_strategy,
+                "outputs": {
+                    "negotiation_history": str(output_path),
+                },
+            },
+            registry_path=registry,
+        )
+
+        console.print("[green]Run is reproducible.[/green]")
+        console.print(
+            f"[green]Saved reproduced negotiation history to {output_path}[/green]"
+        )
+        return
+
+    raise typer.BadParameter(f"Reproduction is not supported for command: {command}")
 
 
 @app.command("version")
