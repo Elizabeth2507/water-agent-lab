@@ -1122,6 +1122,108 @@ def compare_runs(
         console.print("[red]Reproduced output differs from original output.[/red]")
 
 
+@app.command("generate-run-report")
+def generate_run_report(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Run ID whose results should be used for the report.",
+        ),
+    ],
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the Markdown report.",
+        ),
+    ] = Path("docs/experiment_report.md"),
+    # plot: Annotated[
+    #     Path | None,
+    #     typer.Option(
+    #         "--plot",
+    #         help="Optional path to generate and embed a fairness/conflict plot.",
+    #     ),
+    # ] = None,
+) -> None:
+    """
+    Generate a Markdown experiment report from a recorded run-all registry entry.
+    """
+    record = find_experiment_record(
+        run_id=run_id,
+        registry_path=registry,
+    )
+
+    if record is None:
+        raise typer.BadParameter(f"Run ID not found: {run_id}")
+
+    outputs = record.get("outputs", {})
+
+    if not isinstance(outputs, dict):
+        raise typer.BadParameter("Run record does not contain valid outputs.")
+
+    results_path = outputs.get("results")
+
+    if results_path is None:
+        raise typer.BadParameter(
+            "This run does not have a registered results output. "
+            "Only run-all result records can be used for report generation."
+        )
+
+    results_file = Path(str(results_path))
+
+    if results_file.suffix != ".csv":
+        raise typer.BadParameter(
+            "Report generation from registry currently expects a CSV results file."
+        )
+
+    if output.suffix != ".md":
+        raise typer.BadParameter("Report output must end with .md.")
+
+    generate_experiment_report(
+        input_path=results_file,
+        output_path=output,
+        # plot_path=plot,
+    )
+
+    run_metadata = create_run_metadata(command="generate-run-report")
+
+    report_outputs = {
+        "report": str(output),
+    }
+
+    # if plot is not None:
+    #     report_outputs["plot"] = str(plot)
+
+    append_experiment_record(
+        record={
+            **run_metadata,
+            "status": "completed",
+            "source_run_id": run_id,
+            "source_results": str(results_file),
+            "outputs": report_outputs,
+        },
+        registry_path=registry,
+    )
+
+    console.print(f"[green]Saved experiment report to {output}[/green]")
+
+    # if plot is not None:
+    #     console.print(f"[green]Saved report plot to {plot}[/green]")
+
+    console.print(
+        f"[green]Recorded report generation run: {run_metadata['run_id']}[/green]"
+    )
+
+
 @app.command("version")
 def version() -> None:
     """

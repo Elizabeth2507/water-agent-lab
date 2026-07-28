@@ -797,3 +797,83 @@ def test_compare_runs_command_for_reproduced_run_all(tmp_path) -> None:
     assert compare_result.exit_code == 0
     assert "Run Comparison" in compare_result.stdout
     assert "Reproduced output matches original output" in compare_result.stdout
+
+
+def test_generate_run_report_command(tmp_path) -> None:
+    import json
+
+    results_path = tmp_path / "results.csv"
+    registry_path = tmp_path / "registry.jsonl"
+    report_path = tmp_path / "report.md"
+    # plot_path = tmp_path / "report_plot.png"
+
+    results_path.write_text(
+        (
+            "scenario_name,drought_level,strategy,fairness_score,conflict_score,"
+            "minimum_satisfaction_score,shortage_score,agreement_reached\n"
+            "mild_drought,mild,proportional,0.9,0.0,1.0,0.1,True\n"
+            "severe_drought,severe,proportional,0.6,0.5,0.7,0.4,False\n"
+        ),
+        encoding="utf-8",
+    )
+
+    record = {
+        "run_id": "test-run-id",
+        "created_at_utc": "2026-01-01T00:00:00+00:00",
+        "command": "run-all",
+        "status": "completed",
+        "outputs": {
+            "results": str(results_path),
+        },
+    }
+
+    registry_path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "generate-run-report",
+            "--run-id",
+            "test-run-id",
+            "--registry",
+            str(registry_path),
+            "--output",
+            str(report_path),
+            # "--plot",
+            # str(plot_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert report_path.exists()
+    # assert plot_path.exists()
+    assert "Saved experiment report" in result.stdout
+    assert "Recorded report generation run" in result.stdout
+
+    records = [
+        json.loads(line)
+        for line in registry_path.read_text(encoding="utf-8").splitlines()
+    ]
+
+    assert len(records) == 2
+    assert records[1]["command"] == "generate-run-report"
+    assert records[1]["source_run_id"] == "test-run-id"
+    assert records[1]["outputs"]["report"] == str(report_path)
+
+
+def test_generate_run_report_fails_for_missing_run_id(tmp_path) -> None:
+    registry_path = tmp_path / "registry.jsonl"
+    registry_path.write_text("", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "generate-run-report",
+            "--run-id",
+            "missing-run",
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code != 0
