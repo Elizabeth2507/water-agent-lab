@@ -405,6 +405,14 @@ Compare an original run with a reproduced run:
 uv run water-agent-lab compare-runs --run-id ORIGINAL_RUN_ID --reproduced-run-id REPRODUCED_RUN_ID --registry outputs/my_registry.jsonl
 ```
 
+
+Generate a Markdown experiment report:
+
+```bash
+uv run water-agent-lab generate-report --input outputs/results.csv --output docs/experiment_report.md
+```
+
+
 ## Design principle
 
 WaterAgentLab separates responsibilities across modules:
