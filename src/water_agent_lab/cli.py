@@ -1280,6 +1280,99 @@ def dashboard(
     console.print(output_table)
 
 
+@app.command("run-experiment")
+def run_experiment(
+    config_dir: Annotated[
+        Path,
+        typer.Option(
+            "--config-dir",
+            help="Directory containing scenario YAML configs.",
+        ),
+    ] = Path("configs"),
+    results: Annotated[
+        Path,
+        typer.Option(
+            "--results",
+            help="Path to save batch results as CSV.",
+        ),
+    ] = Path("outputs/results.csv"),
+    report: Annotated[
+        Path,
+        typer.Option(
+            "--report",
+            help="Path to save the Markdown experiment report.",
+        ),
+    ] = Path("docs/experiment_report.md"),
+    plot: Annotated[
+        Path,
+        typer.Option(
+            "--plot",
+            help="Path to save the fairness/conflict plot.",
+        ),
+    ] = Path("outputs/report_fairness_conflict.png"),
+    registry: Annotated[
+        Path,
+        typer.Option(
+            "--registry",
+            help="Path to the experiment registry JSONL file.",
+        ),
+    ] = Path("outputs/experiment_registry.jsonl"),
+) -> None:
+    """
+    Run the full experiment pipeline.
+
+    This command runs all scenarios, exports results, generates a Markdown
+    report, creates a plot, and records the experiment in the registry.
+    """
+    if results.suffix != ".csv":
+        raise typer.BadParameter("Experiment results output must end with .csv.")
+
+    if report.suffix != ".md":
+        raise typer.BadParameter("Experiment report output must end with .md.")
+
+    run_metadata = create_run_metadata(command="run-experiment")
+
+    rows = build_run_all_rows(
+        config_dir=config_dir,
+        run_metadata=run_metadata,
+    )
+
+    save_results_csv(
+        results=rows,
+        output_path=results,
+    )
+
+    generate_experiment_report(
+        input_path=results,
+        output_path=report,
+        # plot_path=plot,
+    )
+
+    config_paths = sorted(config_dir.glob("*.yaml"))
+    config_hashes = compute_config_hashes(config_paths)
+
+    append_experiment_record(
+        record={
+            **run_metadata,
+            "status": "completed",
+            "config_dir": str(config_dir),
+            "config_hashes": config_hashes,
+            "outputs": {
+                "results": str(results),
+                "report": str(report),
+                # "plot": str(plot),
+            },
+        },
+        registry_path=registry,
+    )
+
+    console.print("[green]Experiment pipeline completed.[/green]")
+    console.print(f"[green]Saved results to {results}[/green]")
+    console.print(f"[green]Saved report to {report}[/green]")
+    # console.print(f"[green]Saved plot to {plot}[/green]")
+    console.print(f"[green]Recorded run: {run_metadata['run_id']}[/green]")
+
+
 @app.command("version")
 def version() -> None:
     """

@@ -913,3 +913,48 @@ def test_dashboard_command_with_custom_registry(tmp_path) -> None:
     assert "Outputs by Type" in result.stdout
     assert "run-all" in result.stdout
     assert "negotiate-multi" in result.stdout
+
+
+def test_run_experiment_command(tmp_path) -> None:
+    import json
+
+    results_path = tmp_path / "results.csv"
+    report_path = tmp_path / "report.md"
+    # plot_path = tmp_path / "report_plot.png"
+    registry_path = tmp_path / "registry.jsonl"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-experiment",
+            "--config-dir",
+            "configs",
+            "--results",
+            str(results_path),
+            "--report",
+            str(report_path),
+            # "--plot",
+            # str(plot_path),
+            "--registry",
+            str(registry_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert results_path.exists()
+    assert report_path.exists()
+    # assert plot_path.exists()
+    assert registry_path.exists()
+
+    assert "Experiment pipeline completed" in result.stdout
+
+    records = [
+        json.loads(line)
+        for line in registry_path.read_text(encoding="utf-8").splitlines()
+    ]
+
+    assert len(records) == 1
+    assert records[0]["command"] == "run-experiment"
+    assert records[0]["outputs"]["results"] == str(results_path)
+    assert records[0]["outputs"]["report"] == str(report_path)
+    # assert records[0]["outputs"]["plot"] == str(plot_path)

@@ -33,6 +33,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Run metadata with unique run IDs and UTC timestamps
 - Lightweight experiment registry for tracking exported runs
 - Terminal dashboard for experiment registry summaries
+- End-to-end experiment pipeline command
 
 ## Planned extensions
 
@@ -62,6 +63,22 @@ uv sync
 ```
 
 ## Usage
+
+Run the full experiment pipeline:
+
+```bash
+uv run water-agent-lab run-experiment
+```
+
+```markdown
+```bash
+uv run water-agent-lab run-experiment \
+  --config-dir configs \
+  --results outputs/results.csv \
+  --report docs/experiment_report.md \
+  --plot outputs/report_fairness_conflict.png \
+  --registry outputs/experiment_registry.jsonl
+
 
 Run the default MVP simulation:
 
