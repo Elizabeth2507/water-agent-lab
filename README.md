@@ -36,6 +36,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - End-to-end experiment pipeline command
 - One-command demo workflow
 - Safe demo cleanup command
+- Project health check command
 
 
 ## Planned extensions
@@ -100,6 +101,15 @@ uv run water-agent-lab clean-demo --output-dir outputs/custom_demo --yes
 
 
 ## Usage
+
+Check whether the project is ready to run:
+
+```bash
+uv run water-agent-lab doctor
+```
+
+The command validates required scenario configs, checks registered strategies, and confirms output/report directories can be created.
+
 
 Run the full experiment pipeline:
 

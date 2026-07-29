@@ -1101,3 +1101,31 @@ def test_clean_demo_missing_directory(tmp_path) -> None:
 
     assert result.exit_code == 0
     assert "does not exist" in result.stdout
+
+
+def test_doctor_command() -> None:
+    result = runner.invoke(app, ["doctor"])
+
+    assert result.exit_code == 0
+    assert "WaterAgentLab Project Health Check" in result.stdout
+    assert "Project health check passed" in result.stdout
+
+
+def test_doctor_command_fails_for_missing_config_dir(tmp_path) -> None:
+    missing_config_dir = tmp_path / "missing_configs"
+
+    result = runner.invoke(
+        app,
+        [
+            "doctor",
+            "--config-dir",
+            str(missing_config_dir),
+            "--outputs-dir",
+            str(tmp_path / "outputs"),
+            "--docs-dir",
+            str(tmp_path / "docs"),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Project health check failed" in result.stdout

@@ -48,6 +48,7 @@ from water_agent_lab.reproduction import (
 from water_agent_lab.run_comparison import compare_output_files
 from water_agent_lab.dashboard import summarize_registry
 from water_agent_lab.cleanup import demo_output_exists, remove_demo_output
+from water_agent_lab.doctor import check_project_health, project_health_passed
 
 
 app = typer.Typer(
@@ -1497,6 +1498,63 @@ def clean_demo(
 
     remove_demo_output(output_dir)
     console.print(f"[green]Removed demo output directory: {output_dir}[/green]")
+
+
+@app.command("doctor")
+def doctor(
+    config_dir: Annotated[
+        Path,
+        typer.Option(
+            "--config-dir",
+            help="Directory containing scenario YAML configs.",
+        ),
+    ] = Path("configs"),
+    outputs_dir: Annotated[
+        Path,
+        typer.Option(
+            "--outputs-dir",
+            help="Directory for generated outputs.",
+        ),
+    ] = Path("outputs"),
+    docs_dir: Annotated[
+        Path,
+        typer.Option(
+            "--docs-dir",
+            help="Directory for generated documentation reports.",
+        ),
+    ] = Path("docs"),
+) -> None:
+    """
+    Run project health checks.
+    """
+    checks = check_project_health(
+        config_dir=config_dir,
+        outputs_dir=outputs_dir,
+        docs_dir=docs_dir,
+    )
+
+    table = Table(title="WaterAgentLab Project Health Check")
+
+    table.add_column("Check")
+    table.add_column("Status")
+    table.add_column("Details")
+
+    for check in checks:
+        status = "PASS" if check["passed"] else "FAIL"
+
+        table.add_row(
+            str(check["check"]),
+            status,
+            str(check["details"]),
+        )
+
+    console.print(table)
+
+    if project_health_passed(checks):
+        console.print("[green]Project health check passed.[/green]")
+    else:
+        console.print("[red]Project health check failed.[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command("version")
