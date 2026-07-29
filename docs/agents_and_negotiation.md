@@ -343,6 +343,7 @@ The current negotiation loop also uses fixed revision rules rather than learned 
 
 ---
 
+
 ## Generic agent models
 
 WaterAgentLab now includes generic agent models that prepare the project for future LLM-based agents.
@@ -359,6 +360,28 @@ The main models are:
 These models are useful because they allow both rule-based agents and future LLM agents to produce validated, comparable outputs.
 
 A future LLM stakeholder agent should not return only free text. It should return a validated `AgentDecision`.
+
+
+## LLM backend interface
+
+WaterAgentLab uses an `LLMBackend` interface to keep AI-agent logic separate from model execution.
+
+The agent should not directly depend on a specific model such as Qwen. Instead, it sends a structured `LLMGenerationRequest` to a backend.
+
+Current backend:
+
+| Backend | Purpose |
+|---|---|
+| `MockLLMBackend` | Deterministic backend for tests and offline development. |
+
+Future backends:
+
+| Backend | Purpose |
+|---|---|
+| `QwenLocalBackend` | Run a local Qwen instruct model for stakeholder reasoning. |
+| `OpenAIBackend` | Optional hosted API backend. |
+
+This design allows the same `LLMStakeholderAgent` to work with mock responses during tests and real model responses during experiments.
 
 
 ## Future LLM-agent extension
