@@ -16,6 +16,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 
 - [Architecture overview](docs/architecture.md)
 - [CLI command reference](docs/commands.md)
+- [Scenario configuration guide](docs/scenarios.md)
 - [Experiment results](docs/results.md)
 
 ## Current features
