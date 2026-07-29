@@ -54,6 +54,7 @@ WaterAgentLab currently supports:
 - VigiEau sample data-source skeleton
 - Unified data-source registry
 - Scenario export from registered data sources
+- Combined VigiEau + Hub’Eau sample scenario builder
 
 ---
 
@@ -470,8 +471,9 @@ WaterAgentLab also includes a Hub’Eau hydrometry sample adapter:
 uv run water-agent-lab load-hubeau-sample --sample data/sample_hubeau/occitanie_hydrometry_sample.json
 ```
 
+```markdown
 This is currently a local sample-based skeleton. It prepares the project for future integration with river-flow or hydrometric data.
-```
+
 
 
 Export a generated scenario from a data source:
@@ -484,6 +486,26 @@ uv run water-agent-lab export-scenario-from-data \
 ```
 
 The generated YAML file can then be used with simulate, compare, run-all, or negotiate-multi.
+
+
+Build a combined sample scenario:
+
+```bash
+uv run water-agent-lab build-combined-scenario \
+  --vigieau data/sample_vigieau/occitanie_restrictions_sample.json \
+  --hubeau data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_combined_occitanie.yaml
+  ```
+
+
+Build a combined sample scenario:
+
+```bash
+uv run water-agent-lab build-combined-scenario \
+  --vigieau data/sample_vigieau/occitanie_restrictions_sample.json \
+  --hubeau data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_combined_occitanie.yaml
+```
 
 
 ## Design notes

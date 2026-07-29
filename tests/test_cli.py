@@ -1329,3 +1329,45 @@ def test_exported_data_source_scenario_can_be_used_by_simulate_command(
 
     assert simulate_result.exit_code == 0
     assert "occitanie_severe_hubeau_hydrometry_sample" in simulate_result.stdout
+
+
+def test_build_combined_scenario_command(tmp_path) -> None:
+    output_path = tmp_path / "combined_occitanie.yaml"
+
+    result = runner.invoke(
+        app,
+        [
+            "build-combined-scenario",
+            "--vigieau",
+            "data/sample_vigieau/occitanie_restrictions_sample.json",
+            "--hubeau",
+            "data/sample_hubeau/occitanie_hydrometry_sample.json",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Combined VigiEau + Hub'Eau Scenario" in result.stdout
+    assert "occitanie_extreme_combined_sample" in result.stdout
+    assert "Saved combined scenario" in result.stdout
+
+
+def test_build_combined_scenario_rejects_invalid_suffix(tmp_path) -> None:
+    output_path = tmp_path / "combined_occitanie.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "build-combined-scenario",
+            "--vigieau",
+            "data/sample_vigieau/occitanie_restrictions_sample.json",
+            "--hubeau",
+            "data/sample_hubeau/occitanie_hydrometry_sample.json",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0

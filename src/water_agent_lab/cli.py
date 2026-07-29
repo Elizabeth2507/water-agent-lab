@@ -59,6 +59,9 @@ from water_agent_lab.data_source_registry import (
     get_data_source_names,
 )
 from water_agent_lab.scenario_exporter import save_scenario_yaml
+from water_agent_lab.combined_scenario_builder import (
+    build_combined_vigieau_hubeau_scenario,
+)
 
 
 app = typer.Typer(
@@ -1794,6 +1797,69 @@ def export_scenario_from_data(
 
     console.print(table)
     console.print(f"[green]Saved generated scenario to {output}[/green]")
+
+
+@app.command("build-combined-scenario")
+def build_combined_scenario(
+    vigieau: Annotated[
+        Path,
+        typer.Option(
+            "--vigieau",
+            help="Path to a simplified VigiEau-style sample JSON response.",
+        ),
+    ],
+    hubeau: Annotated[
+        Path,
+        typer.Option(
+            "--hubeau",
+            help="Path to a simplified Hub'Eau hydrometry sample JSON response.",
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the combined scenario YAML.",
+        ),
+    ],
+) -> None:
+    """
+    Build a combined drought scenario from VigiEau and Hub'Eau sample sources.
+    """
+    if output.suffix not in {".yaml", ".yml"}:
+        raise typer.BadParameter("Output scenario file must end with .yaml or .yml.")
+
+    vigieau_data_source = VigiEauDataSource(sample_response_path=vigieau)
+    hubeau_data_source = HubEauHydrometryDataSource(sample_response_path=hubeau)
+
+    scenario = build_combined_vigieau_hubeau_scenario(
+        vigieau_data_source=vigieau_data_source,
+        hubeau_data_source=hubeau_data_source,
+    )
+
+    save_scenario_yaml(
+        scenario=scenario,
+        output_path=output,
+    )
+
+    table = Table(title="Combined VigiEau + Hub'Eau Scenario")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("VigiEau sample", str(vigieau))
+    table.add_row("Hub'Eau sample", str(hubeau))
+    table.add_row("Scenario name", scenario.scenario_name)
+    table.add_row("Country", scenario.country)
+    table.add_row("Region", scenario.region)
+    table.add_row("Drought level", scenario.drought_level)
+    table.add_row("Available water", f"{scenario.available_water:.2f}")
+    table.add_row("Stakeholders", str(len(scenario.stakeholders)))
+    table.add_row("Output", str(output))
+
+    console.print(table)
+    console.print(f"[green]Saved combined scenario to {output}[/green]")
 
 
 @app.command("version")

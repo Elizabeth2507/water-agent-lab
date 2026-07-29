@@ -438,6 +438,24 @@ uv run water-agent-lab simulate --config configs/generated_hubeau_occitanie.yaml
 ```
 
 
+### `build-combined-scenario`
+
+Build a combined drought scenario from VigiEau and Hub’Eau sample sources.
+
+```bash
+uv run water-agent-lab build-combined-scenario \
+  --vigieau data/sample_vigieau/occitanie_restrictions_sample.json \
+  --hubeau data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_combined_occitanie.yaml
+```
+
+Then run:
+
+```bash
+uv run water-agent-lab simulate --config configs/generated_combined_occitanie.yaml --strategy minimum-first
+```
+
+
 ---
 
 ## Version
