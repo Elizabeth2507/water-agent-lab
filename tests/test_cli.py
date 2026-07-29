@@ -958,3 +958,78 @@ def test_run_experiment_command(tmp_path) -> None:
     assert records[0]["outputs"]["results"] == str(results_path)
     assert records[0]["outputs"]["report"] == str(report_path)
     # assert records[0]["outputs"]["plot"] == str(plot_path)
+
+
+def test_generate_report_command_with_plot(tmp_path: Path) -> None:
+    results_path = tmp_path / "all_results.csv"
+    report_path = tmp_path / "experiment_report.md"
+    plot_path = tmp_path / "fairness_conflict.png"
+
+    run_all_result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(results_path),
+        ],
+    )
+
+    assert run_all_result.exit_code == 0
+    assert results_path.exists()
+
+    report_result = runner.invoke(
+        app,
+        [
+            "generate-report",
+            "--input",
+            str(results_path),
+            "--output",
+            str(report_path),
+            "--plot",
+            str(plot_path),
+        ],
+    )
+
+    assert report_result.exit_code == 0
+    assert report_path.exists()
+    assert plot_path.exists()
+    assert "Saved experiment report" in report_result.stdout
+    assert "Saved report plot" in report_result.stdout
+
+
+def test_generate_report_command_rejects_non_png_plot(
+    tmp_path: Path,
+) -> None:
+    results_path = tmp_path / "all_results.csv"
+    report_path = tmp_path / "experiment_report.md"
+    plot_path = tmp_path / "fairness_conflict.jpg"
+
+    run_all_result = runner.invoke(
+        app,
+        [
+            "run-all",
+            "--config-dir",
+            "configs",
+            "--output",
+            str(results_path),
+        ],
+    )
+
+    assert run_all_result.exit_code == 0
+
+    report_result = runner.invoke(
+        app,
+        [
+            "generate-report",
+            "--input",
+            str(results_path),
+            "--output",
+            str(report_path),
+            "--plot",
+            str(plot_path),
+        ],
+    )
+
+    assert report_result.exit_code != 0

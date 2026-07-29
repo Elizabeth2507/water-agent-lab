@@ -78,7 +78,7 @@ uv run water-agent-lab run-experiment \
   --report docs/experiment_report.md \
   --plot outputs/report_fairness_conflict.png \
   --registry outputs/experiment_registry.jsonl
-
+```
 
 Run the default MVP simulation:
 
@@ -194,6 +194,13 @@ Generate a Markdown experiment summary report from CSV results.
 uv run water-agent-lab generate-report \
   --input outputs/all_results.csv \
   --output docs/experiment_report.md
+```
+
+Generate a report and embed a fairness/conflict plot:
+
+```bash
+uv run water-agent-lab run-all --config-dir configs --output outputs/all_results.csv
+uv run water-agent-lab generate-report --input outputs/all_results.csv --output docs/experiment_report.md --plot outputs/fairness_conflict.png
 ```
 
 
@@ -467,3 +474,8 @@ docs/results.md
 
 ```markdown
 - [Experiment report](docs/experiment_report.md)
+
+
+## Plots
+
+![Fairness and conflict comparison](../outputs/fairness_conflict.png)

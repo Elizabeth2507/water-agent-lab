@@ -143,3 +143,26 @@ def test_generate_experiment_report(tmp_path: Path) -> None:
     assert "Summary by strategy" in content
     assert "Summary by drought level" in content
     assert "Best strategy per scenario" in content
+
+
+def test_generate_experiment_report_with_plot(tmp_path: Path) -> None:
+    input_path = tmp_path / "results.csv"
+    output_path = tmp_path / "experiment_report.md"
+    plot_path = tmp_path / "fairness_conflict.png"
+
+    save_results_csv(make_sample_rows(), input_path)
+
+    generate_experiment_report(
+        input_path=input_path,
+        output_path=output_path,
+        plot_path=plot_path,
+    )
+
+    assert output_path.exists()
+    assert plot_path.exists()
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "## Plots" in content
+    assert "Fairness and conflict comparison" in content
+    assert "fairness_conflict.png" in content   

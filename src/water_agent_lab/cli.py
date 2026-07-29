@@ -426,6 +426,13 @@ def generate_report(
             help="Path to save the Markdown experiment report.",
         ),
     ] = Path("docs/experiment_report.md"),
+    plot: Annotated[
+        Path | None,
+        typer.Option(
+            "--plot",
+            help="Optional path to save and embed a fairness/conflict plot.",
+        ),
+    ] = None,
 ) -> None:
     """
     Generate a Markdown experiment summary report from CSV results.
@@ -433,10 +440,14 @@ def generate_report(
     if output.suffix != ".md":
         raise typer.BadParameter("Output report file must end with .md.")
 
+    if plot is not None and plot.suffix != ".png":
+        raise typer.BadParameter("Plot file must end with .png.")
+
     try:
         generate_experiment_report(
             input_path=input,
             output_path=output,
+            plot_path=plot,
         )
     except FileNotFoundError as error:
         raise typer.BadParameter(str(error)) from error
@@ -444,6 +455,9 @@ def generate_report(
         raise typer.BadParameter(str(error)) from error
 
     console.print(f"[green]Saved experiment report to {output}[/green]")
+
+    if plot is not None:
+        console.print(f"[green]Saved report plot to {plot}[/green]")
 
 
 @app.command("agent-responses")
@@ -1147,13 +1161,13 @@ def generate_run_report(
             help="Path to save the Markdown report.",
         ),
     ] = Path("docs/experiment_report.md"),
-    # plot: Annotated[
-    #     Path | None,
-    #     typer.Option(
-    #         "--plot",
-    #         help="Optional path to generate and embed a fairness/conflict plot.",
-    #     ),
-    # ] = None,
+    plot: Annotated[
+        Path | None,
+        typer.Option(
+            "--plot",
+            help="Optional path to generate and embed a fairness/conflict plot.",
+        ),
+    ] = None,
 ) -> None:
     """
     Generate a Markdown experiment report from a recorded run-all registry entry.
@@ -1192,7 +1206,7 @@ def generate_run_report(
     generate_experiment_report(
         input_path=results_file,
         output_path=output,
-        # plot_path=plot,
+        plot_path=plot,
     )
 
     run_metadata = create_run_metadata(command="generate-run-report")
@@ -1345,7 +1359,7 @@ def run_experiment(
     generate_experiment_report(
         input_path=results,
         output_path=report,
-        # plot_path=plot,
+        plot_path=plot,
     )
 
     config_paths = sorted(config_dir.glob("*.yaml"))
@@ -1360,7 +1374,7 @@ def run_experiment(
             "outputs": {
                 "results": str(results),
                 "report": str(report),
-                # "plot": str(plot),
+                "plot": str(plot),
             },
         },
         registry_path=registry,
@@ -1369,7 +1383,7 @@ def run_experiment(
     console.print("[green]Experiment pipeline completed.[/green]")
     console.print(f"[green]Saved results to {results}[/green]")
     console.print(f"[green]Saved report to {report}[/green]")
-    # console.print(f"[green]Saved plot to {plot}[/green]")
+    console.print(f"[green]Saved plot to {plot}[/green]")
     console.print(f"[green]Recorded run: {run_metadata['run_id']}[/green]")
 
 

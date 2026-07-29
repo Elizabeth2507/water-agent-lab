@@ -1,6 +1,9 @@
+import os
 from pathlib import Path
 
 import pandas as pd
+
+from water_agent_lab.plotter import plot_fairness_conflict
 
 
 REQUIRED_REPORT_COLUMNS = {
@@ -148,12 +151,36 @@ def dataframe_to_markdown_table(dataframe: pd.DataFrame) -> str:
     return display_dataframe.to_markdown(index=False)
 
 
+def make_markdown_relative_path(
+    target_path: str | Path,
+    markdown_file_path: str | Path,
+) -> str:
+    """
+    Build a Markdown-friendly relative path from a Markdown file to another file.
+
+    This keeps image links portable across Windows, Linux, and GitHub.
+    """
+    target = Path(target_path)
+    markdown_file = Path(markdown_file_path)
+
+    relative_path = os.path.relpath(
+        target,
+        start=markdown_file.parent,
+    )
+
+    return Path(relative_path).as_posix()
+
+
 def generate_experiment_report(
     input_path: str | Path,
     output_path: str | Path,
+    plot_path: str | Path | None = None,
 ) -> None:
     """
     Generate a Markdown experiment summary report from a CSV results file.
+
+    If plot_path is provided, a fairness/conflict plot is generated and embedded
+    into the Markdown report.
     """
     dataframe = load_experiment_results(input_path)
 
@@ -162,6 +189,31 @@ def generate_experiment_report(
     best_strategies = find_best_strategy_by_conflict(dataframe)
 
     drought_levels = ", ".join(sorted(dataframe["drought_level"].astype(str).unique()))
+
+    plot_section: list[str] = []
+
+    if plot_path is not None:
+        plot_output_path = Path(plot_path)
+        plot_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        plot_fairness_conflict(
+            input_path=input_path,
+            output_path=plot_output_path,
+        )
+
+        markdown_plot_path = make_markdown_relative_path(
+            target_path=plot_output_path,
+            markdown_file_path=output_path,
+        )
+
+        plot_section = [
+            "## Plots",
+            "",
+            "The plot below compares fairness and conflict scores across scenarios and allocation strategies.",
+            "",
+            f"![Fairness and conflict comparison]({markdown_plot_path})",
+            "",
+        ]
 
     content_parts = [
         "# WaterAgentLab Experiment Report",
@@ -202,6 +254,7 @@ def generate_experiment_report(
         "",
         dataframe_to_markdown_table(best_strategies),
         "",
+        *plot_section,
         "## Interpretation guide",
         "",
         "| Metric | Meaning |",
@@ -221,3 +274,78 @@ def generate_experiment_report(
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+
+
+# def generate_experiment_report(
+#     input_path: str | Path,
+#     output_path: str | Path,
+# ) -> None:
+#     """
+#     Generate a Markdown experiment summary report from a CSV results file.
+#     """
+#     dataframe = load_experiment_results(input_path)
+
+#     strategy_summary = summarize_by_strategy(dataframe)
+#     drought_summary = summarize_by_drought_level(dataframe)
+#     best_strategies = find_best_strategy_by_conflict(dataframe)
+
+#     drought_levels = ", ".join(sorted(dataframe["drought_level"].astype(str).unique()))
+
+#     content_parts = [
+#         "# WaterAgentLab Experiment Report",
+#         "",
+#         "This report summarizes allocation strategy results produced by WaterAgentLab.",
+#         "",
+#         "## Input file",
+#         "",
+#         "```text",
+#         str(input_path),
+#         "```",
+#         "",
+#         "## Overview",
+#         "",
+#         "| Field | Value |",
+#         "|---|---|",
+#         f"| Number of rows | `{len(dataframe)}` |",
+#         f"| Number of scenarios | `{dataframe['scenario_name'].nunique()}` |",
+#         f"| Number of strategies | `{dataframe['strategy'].nunique()}` |",
+#         f"| Drought levels | `{drought_levels}` |",
+#         "",
+#         "## Summary by strategy",
+#         "",
+#         dataframe_to_markdown_table(strategy_summary),
+#         "",
+#         "## Summary by drought level",
+#         "",
+#         dataframe_to_markdown_table(drought_summary),
+#         "",
+#         "## Best strategy per scenario",
+#         "",
+#         "The best strategy is selected by:",
+#         "",
+#         "1. Lower conflict score",
+#         "2. Higher minimum satisfaction score",
+#         "3. Higher fairness score",
+#         "4. Lower shortage score",
+#         "",
+#         dataframe_to_markdown_table(best_strategies),
+#         "",
+#         "## Interpretation guide",
+#         "",
+#         "| Metric | Meaning |",
+#         "|---|---|",
+#         "| `agreement_rate` | Share of runs where all stakeholders met minimum acceptable water |",
+#         "| `average_fairness` | Average fairness score across scenarios |",
+#         "| `average_conflict` | Average share of stakeholders below minimum acceptable water |",
+#         "| `average_minimum_satisfaction` | Average satisfaction of minimum needs |",
+#         "| `average_shortage` | Average shortage pressure |",
+#         "",
+#         "A lower conflict score is usually the most important signal because it means fewer stakeholders fall below their minimum acceptable water.",
+#         "",
+#     ]
+
+#     content = "\n".join(content_parts)
+
+#     path = Path(output_path)
+#     path.parent.mkdir(parents=True, exist_ok=True)
+#     path.write_text(content, encoding="utf-8")
