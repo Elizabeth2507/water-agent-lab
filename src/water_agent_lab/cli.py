@@ -49,7 +49,11 @@ from water_agent_lab.run_comparison import compare_output_files
 from water_agent_lab.dashboard import summarize_registry
 from water_agent_lab.cleanup import demo_output_exists, remove_demo_output
 from water_agent_lab.doctor import check_project_health, project_health_passed
-from water_agent_lab.data_sources import MockDroughtDataSource, VigiEauDataSource
+from water_agent_lab.data_sources import (
+    MockDroughtDataSource,
+    VigiEauDataSource,
+    HubEauHydrometryDataSource,
+)
 
 
 app = typer.Typer(
@@ -1621,6 +1625,48 @@ def load_vigieau_sample(
     table.add_row("Source type", metadata.source_type)
     table.add_row("Source URL", str(metadata.source_url))
     table.add_row("Sample path", str(metadata.source_path))
+    table.add_row("Scenario name", scenario.scenario_name)
+    table.add_row("Country", scenario.country)
+    table.add_row("Region", scenario.region)
+    table.add_row("Drought level", scenario.drought_level)
+    table.add_row("Available water", f"{scenario.available_water:.2f}")
+    table.add_row("Stakeholders", str(len(scenario.stakeholders)))
+
+    console.print(table)
+
+
+@app.command("load-hubeau-sample")
+def load_hubeau_sample(
+    sample: Annotated[
+        Path,
+        typer.Option(
+            "--sample",
+            help="Path to a simplified Hub'Eau hydrometry sample JSON response.",
+        ),
+    ] = Path("data/sample_hubeau/occitanie_hydrometry_sample.json"),
+) -> None:
+    """
+    Load a simplified Hub'Eau hydrometry sample response and show the generated scenario.
+    """
+    data_source = HubEauHydrometryDataSource(sample_response_path=sample)
+
+    metadata = data_source.metadata()
+    scenario = data_source.load_scenario()
+    raw_response = data_source.load_sample_response()
+
+    table = Table(title="Hub'Eau Hydrometry Sample Data Source")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Source name", metadata.source_name)
+    table.add_row("Source type", metadata.source_type)
+    table.add_row("Source URL", str(metadata.source_url))
+    table.add_row("Sample path", str(metadata.source_path))
+    table.add_row("Station code", str(raw_response.get("station_code", "")))
+    table.add_row("Station label", str(raw_response.get("station_label", "")))
+    table.add_row("Observed flow", str(raw_response.get("observed_flow_m3s", "")))
+    table.add_row("Normal flow", str(raw_response.get("normal_flow_m3s", "")))
     table.add_row("Scenario name", scenario.scenario_name)
     table.add_row("Country", scenario.country)
     table.add_row("Region", scenario.region)

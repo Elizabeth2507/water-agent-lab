@@ -261,6 +261,28 @@ data/sample_vigieau/occitanie_restrictions_sample.json
 ```
 
 
+## Hub’Eau hydrometry sample adapter
+
+WaterAgentLab includes a skeleton adapter for simplified Hub’Eau hydrometry-style data.
+
+Example sample file:
+
+```text
+data/sample_hubeau/occitanie_hydrometry_sample.json
+```
+
+
+## Hub’Eau hydrometry sample adapter
+
+WaterAgentLab includes a skeleton adapter for simplified Hub’Eau hydrometry-style data.
+
+Example sample file:
+
+```text
+data/sample_hubeau/occitanie_hydrometry_sample.json
+```
+
+
 ## Notes for future real-data scenarios
 
 Current scenarios are synthetic. Future versions may include fields for:

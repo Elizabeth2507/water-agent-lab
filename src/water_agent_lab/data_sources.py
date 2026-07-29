@@ -233,3 +233,125 @@ class VigiEauDataSource:
         """
         response = self.load_sample_response()
         return self.response_to_scenario(response)
+
+
+class HubEauHydrometryDataSource:
+    """
+    Hub'Eau Hydrometry data source skeleton.
+
+    This class prepares the project for future live Hub'Eau hydrometry
+    integration. For now, it transforms a simplified local hydrometry-style
+    sample response into a ScenarioConfig.
+    """
+
+    BASE_URL = "https://hubeau.eaufrance.fr/api/v2/hydrometrie"
+
+    DEFAULT_REQUESTS = {
+        "agriculture": 50.0,
+        "urban": 35.0,
+        "industry": 25.0,
+        "ecosystem": 20.0,
+    }
+
+    DEFAULT_MINIMUMS = {
+        "agriculture": 35.0,
+        "urban": 28.0,
+        "industry": 15.0,
+        "ecosystem": 18.0,
+    }
+
+    HYDROMETRY_STATUS_MAPPING = {
+        "normal": "mild",
+        "below_normal": "moderate",
+        "low_flow": "severe",
+        "critical_low_flow": "extreme",
+    }
+
+    def __init__(
+        self,
+        sample_response_path: str | Path | None = None,
+        api_base_url: str = BASE_URL,
+    ) -> None:
+        self.sample_response_path = (
+            Path(sample_response_path) if sample_response_path is not None else None
+        )
+        self.api_base_url = api_base_url
+
+    def metadata(self) -> DataSourceMetadata:
+        return DataSourceMetadata(
+            source_name="hubeau_hydrometry",
+            source_type="public_api_skeleton",
+            source_path=(
+                str(self.sample_response_path)
+                if self.sample_response_path is not None
+                else None
+            ),
+            source_url=self.api_base_url,
+            description=(
+                "Skeleton adapter for Hub'Eau hydrometry data. "
+                "Currently supports local simplified sample responses."
+            ),
+        )
+
+    def load_sample_response(self) -> dict[str, Any]:
+        """
+        Load a simplified local Hub'Eau hydrometry-style sample response.
+        """
+        if self.sample_response_path is None:
+            raise ValueError("No sample_response_path was provided.")
+
+        with self.sample_response_path.open("r", encoding="utf-8") as file:
+            raw_response = json.load(file)
+
+        if not isinstance(raw_response, dict):
+            raise ValueError("Hub'Eau sample response must contain a JSON object.")
+
+        return raw_response
+
+    def hydrometry_status_to_drought_level(self, hydrometry_status: str) -> str:
+        """
+        Map a hydrometry status to an internal drought level.
+        """
+        return self.HYDROMETRY_STATUS_MAPPING.get(hydrometry_status, "unknown")
+
+    def response_to_scenario(self, response: dict[str, Any]) -> ScenarioConfig:
+        """
+        Convert a simplified Hub'Eau hydrometry-style response into a ScenarioConfig.
+        """
+        hydrometry_status = str(response["hydrometry_status"])
+        drought_level = self.hydrometry_status_to_drought_level(hydrometry_status)
+
+        stakeholder_profile = response["stakeholder_profile"]
+
+        stakeholders = []
+
+        for stakeholder_name, profile_data in stakeholder_profile.items():
+            stakeholders.append(
+                {
+                    "name": stakeholder_name,
+                    "requested_water": self.DEFAULT_REQUESTS[stakeholder_name],
+                    "minimum_acceptable_water": self.DEFAULT_MINIMUMS[stakeholder_name],
+                    "priority": profile_data["priority"],
+                }
+            )
+
+        scenario_data = {
+            "scenario_name": (
+                f"{response['region'].lower()}_{drought_level}_hubeau_hydrometry_sample"
+            ),
+            "country": response["country"],
+            "region": response["region"],
+            "drought_level": drought_level,
+            "available_water": response["available_water_proxy"],
+            "max_rounds": response["max_rounds"],
+            "stakeholders": stakeholders,
+        }
+
+        return ScenarioConfig.model_validate(scenario_data)
+
+    def load_scenario(self) -> ScenarioConfig:
+        """
+        Load a scenario from the local sample response.
+        """
+        response = self.load_sample_response()
+        return self.response_to_scenario(response)

@@ -461,6 +461,18 @@ uv run water-agent-lab load-vigieau-sample --sample data/sample_vigieau/occitani
 ```
 
 
+```markdown
+WaterAgentLab also includes a Hub’Eau hydrometry sample adapter:
+
+```bash
+uv run water-agent-lab load-hubeau-sample --sample data/sample_hubeau/occitanie_hydrometry_sample.json
+```
+
+This is currently a local sample-based skeleton. It prepares the project for future integration with river-flow or hydrometric data.
+```
+
+
+
 ## Design notes
 
 The main branch is kept deterministic because reproducibility matters for this kind of simulation. Before adding LLM agents, it is useful to have a baseline where every run can be tested and compared exactly.

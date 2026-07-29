@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from water_agent_lab.data_sources import (
+    HubEauHydrometryDataSource,
     MockDroughtDataSource,
     SyntheticScenarioDataSource,
     VigiEauDataSource,
@@ -119,6 +120,60 @@ def test_vigieau_data_source_converts_sample_to_scenario() -> None:
     assert scenario.region == "Occitanie"
     assert scenario.drought_level == "extreme"
     assert scenario.available_water == 60.0
+    assert len(scenario.stakeholders) == 4
+
+    stakeholder_names = {stakeholder.name for stakeholder in scenario.stakeholders}
+    assert stakeholder_names == {"agriculture", "urban", "industry", "ecosystem"}
+
+
+def test_hubeau_hydrometry_data_source_metadata() -> None:
+    data_source = HubEauHydrometryDataSource(
+        sample_response_path="data/sample_hubeau/occitanie_hydrometry_sample.json"
+    )
+
+    metadata = data_source.metadata()
+
+    assert metadata.source_name == "hubeau_hydrometry"
+    assert metadata.source_type == "public_api_skeleton"
+    assert metadata.source_url == "https://hubeau.eaufrance.fr/api/v2/hydrometrie"
+
+
+def test_hubeau_hydrometry_data_source_loads_sample_response() -> None:
+    data_source = HubEauHydrometryDataSource(
+        sample_response_path="data/sample_hubeau/occitanie_hydrometry_sample.json"
+    )
+
+    response = data_source.load_sample_response()
+
+    assert response["country"] == "France"
+    assert response["region"] == "Occitanie"
+    assert response["hydrometry_status"] == "low_flow"
+
+
+def test_hubeau_hydrometry_status_mapping() -> None:
+    data_source = HubEauHydrometryDataSource()
+
+    assert data_source.hydrometry_status_to_drought_level("normal") == "mild"
+    assert data_source.hydrometry_status_to_drought_level("below_normal") == "moderate"
+    assert data_source.hydrometry_status_to_drought_level("low_flow") == "severe"
+    assert (
+        data_source.hydrometry_status_to_drought_level("critical_low_flow") == "extreme"
+    )
+    assert data_source.hydrometry_status_to_drought_level("unknown_level") == "unknown"
+
+
+def test_hubeau_hydrometry_data_source_converts_sample_to_scenario() -> None:
+    data_source = HubEauHydrometryDataSource(
+        sample_response_path="data/sample_hubeau/occitanie_hydrometry_sample.json"
+    )
+
+    scenario = data_source.load_scenario()
+
+    assert scenario.scenario_name == "occitanie_severe_hubeau_hydrometry_sample"
+    assert scenario.country == "France"
+    assert scenario.region == "Occitanie"
+    assert scenario.drought_level == "severe"
+    assert scenario.available_water == 70.0
     assert len(scenario.stakeholders) == 4
 
     stakeholder_names = {stakeholder.name for stakeholder in scenario.stakeholders}

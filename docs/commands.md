@@ -373,6 +373,23 @@ Load a simplified VigiEau-style sample response and show the generated scenario.
 uv run water-agent-lab load-vigieau-sample --sample data/sample_vigieau/occitanie_restrictions_sample.json
 ```
 
+
+### `load-hubeau-sample`
+
+Load a simplified Hub’Eau hydrometry-style sample response and show the generated scenario.
+
+```bash
+uv run water-agent-lab load-hubeau-sample --sample data/sample_hubeau/occitanie_hydrometry_sample.json
+```
+
+### `load-hubeau-sample`
+
+Load a simplified Hub’Eau hydrometry-style sample response and show the generated scenario.
+
+```bash
+uv run water-agent-lab load-hubeau-sample --sample data/sample_hubeau/occitanie_hydrometry_sample.json
+```
+
 ---
 
 
