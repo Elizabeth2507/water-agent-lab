@@ -1,0 +1,401 @@
+# WaterAgentLab CLI Commands
+
+WaterAgentLab provides a command-line interface for running drought allocation simulations, stakeholder negotiation, experiment tracking, reproducibility checks, reports, and demos.
+
+All commands use:
+
+```bash
+uv run water-agent-lab <command>
+```
+
+## Health and demo commands
+
+### `doctor`
+
+Check whether the project is ready to run.
+
+```bash
+uv run water-agent-lab doctor
+```
+
+Checks scenario configs, registered strategies, and writable output/report directories.
+
+### `demo`
+
+Run a complete demo workflow.
+
+```bash
+uv run water-agent-lab demo
+```
+
+Use a custom output directory:
+
+```bash
+uv run water-agent-lab demo --output-dir outputs/custom_demo
+```
+
+The demo creates:
+
+```text
+results.csv
+experiment_report.md
+fairness_conflict.png
+experiment_registry.jsonl
+```
+
+### `clean-demo`
+
+Preview deletion of demo outputs:
+
+```bash
+uv run water-agent-lab clean-demo --output-dir outputs/custom_demo
+```
+
+Actually delete them:
+
+```bash
+uv run water-agent-lab clean-demo --output-dir outputs/custom_demo --yes
+```
+
+Without `--yes`, this command only performs a dry run.
+
+---
+
+## Simulation commands
+
+### `simulate`
+
+Run one allocation strategy on one scenario.
+
+```bash
+uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy proportional
+```
+
+With structured logs:
+
+```bash
+uv run water-agent-lab simulate --config configs/drought_mvp.yaml --strategy proportional --log-file outputs/simulation.log
+```
+
+Available strategies:
+
+```text
+proportional
+priority
+minimum-first
+minimum-priority
+```
+
+### `compare`
+
+Compare all available strategies on one scenario.
+
+```bash
+uv run water-agent-lab compare --config configs/drought_mvp.yaml
+```
+
+### `run-all`
+
+Run all scenario configs with all available strategies.
+
+```bash
+uv run water-agent-lab run-all --config-dir configs
+```
+
+Export results:
+
+```bash
+uv run water-agent-lab run-all --config-dir configs --output outputs/results.csv
+```
+
+Use a custom registry:
+
+```bash
+uv run water-agent-lab run-all --config-dir configs --output outputs/results.csv --registry outputs/my_registry.jsonl
+```
+
+### `run-experiment`
+
+Run the full experiment pipeline.
+
+```bash
+uv run water-agent-lab run-experiment
+```
+
+This command:
+
+```text
+runs all scenarios
+exports results CSV
+generates a Markdown report
+creates a fairness/conflict plot
+records the run in the registry
+```
+
+Custom paths:
+
+```bash
+uv run water-agent-lab run-experiment \
+  --config-dir configs \
+  --results outputs/results.csv \
+  --report docs/experiment_report.md \
+  --plot outputs/report_fairness_conflict.png \
+  --registry outputs/experiment_registry.jsonl
+```
+
+---
+
+## Agent and negotiation commands
+
+### `agent-responses`
+
+Show rule-based stakeholder responses to an allocation proposal.
+
+```bash
+uv run water-agent-lab agent-responses --config configs/drought_mvp.yaml --strategy proportional
+```
+
+Each stakeholder response is one of:
+
+```text
+accepted
+concerned
+rejected
+```
+
+### `negotiate`
+
+Run a simple one-step negotiation.
+
+```bash
+uv run water-agent-lab negotiate --config configs/drought_mvp.yaml --strategy proportional
+```
+
+If stakeholders reject the initial proposal, the system revises using `minimum-first`.
+
+### `negotiate-multi`
+
+Run a multi-round rule-based negotiation.
+
+```bash
+uv run water-agent-lab negotiate-multi --config configs/drought_mvp.yaml --strategy proportional
+```
+
+Save full negotiation history:
+
+```bash
+uv run water-agent-lab negotiate-multi \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/negotiation_history.json
+```
+
+With logs and custom registry:
+
+```bash
+uv run water-agent-lab negotiate-multi \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/negotiation_history.json \
+  --log-file outputs/negotiation.log \
+  --registry outputs/my_registry.jsonl
+```
+
+### `summarize-negotiation`
+
+Summarize a saved negotiation history JSON file.
+
+```bash
+uv run water-agent-lab summarize-negotiation --input outputs/negotiation_history.json
+```
+
+---
+
+## Plot and report commands
+
+### `plot-results`
+
+Generate a fairness/conflict plot from exported results.
+
+```bash
+uv run water-agent-lab plot-results --input outputs/results.csv --output outputs/fairness_conflict.png
+```
+
+### `generate-report`
+
+Generate a Markdown report from a results CSV.
+
+```bash
+uv run water-agent-lab generate-report --input outputs/results.csv --output docs/experiment_report.md
+```
+
+Generate a report with an embedded plot:
+
+```bash
+uv run water-agent-lab generate-report \
+  --input outputs/results.csv \
+  --output docs/experiment_report.md \
+  --plot outputs/report_fairness_conflict.png
+```
+
+### `generate-run-report`
+
+Generate a report from a recorded `run-all` registry entry.
+
+```bash
+uv run water-agent-lab generate-run-report \
+  --run-id YOUR_RUN_ID \
+  --registry outputs/my_registry.jsonl \
+  --output docs/experiment_report.md
+```
+
+With a plot:
+
+```bash
+uv run water-agent-lab generate-run-report \
+  --run-id YOUR_RUN_ID \
+  --registry outputs/my_registry.jsonl \
+  --output docs/experiment_report.md \
+  --plot outputs/report_fairness_conflict.png
+```
+
+---
+
+## Experiment registry commands
+
+### `list-runs`
+
+List recorded experiment runs.
+
+```bash
+uv run water-agent-lab list-runs
+```
+
+With custom registry:
+
+```bash
+uv run water-agent-lab list-runs --registry outputs/my_registry.jsonl
+```
+
+### `show-run`
+
+Show details for one recorded run.
+
+```bash
+uv run water-agent-lab show-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+```
+
+### `dashboard`
+
+Show a dashboard summary of the experiment registry.
+
+```bash
+uv run water-agent-lab dashboard --registry outputs/my_registry.jsonl
+```
+
+The dashboard summarizes:
+
+```text
+total runs
+runs by command
+reproduced runs
+latest run
+outputs by type
+```
+
+---
+
+## Reproducibility commands
+
+### `verify-run`
+
+Check whether current config files still match the hashes recorded for a run.
+
+```bash
+uv run water-agent-lab verify-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+```
+
+### `reproduce-run`
+
+Reproduce a recorded run if config hashes still match.
+
+```bash
+uv run water-agent-lab reproduce-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+```
+
+The reproduced run is recorded in the registry with:
+
+```text
+reproduced_from_run_id
+```
+
+### `compare-runs`
+
+Compare an original run with a reproduced run.
+
+```bash
+uv run water-agent-lab compare-runs \
+  --run-id ORIGINAL_RUN_ID \
+  --reproduced-run-id REPRODUCED_RUN_ID \
+  --registry outputs/my_registry.jsonl
+```
+
+The comparison ignores run-specific metadata such as run IDs and timestamps.
+
+---
+
+## Config validation
+
+### `validate-config`
+
+Validate one scenario config.
+
+```bash
+uv run water-agent-lab validate-config --config configs/drought_mvp.yaml
+```
+
+---
+
+## Version
+
+### `version`
+
+Show the package version.
+
+```bash
+uv run water-agent-lab version
+```
+
+---
+
+## Recommended workflows
+
+### Quick demo
+
+```bash
+uv run water-agent-lab demo
+uv run water-agent-lab dashboard --registry outputs/demo/experiment_registry.jsonl
+```
+
+### Full experiment
+
+```bash
+uv run water-agent-lab run-experiment
+```
+
+### Manual experiment workflow
+
+```bash
+uv run water-agent-lab run-all --config-dir configs --output outputs/results.csv
+uv run water-agent-lab generate-report --input outputs/results.csv --output docs/experiment_report.md --plot outputs/report_fairness_conflict.png
+uv run water-agent-lab dashboard
+```
+
+### Reproducibility workflow
+
+```bash
+uv run water-agent-lab list-runs --registry outputs/my_registry.jsonl
+uv run water-agent-lab verify-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+uv run water-agent-lab reproduce-run --run-id YOUR_RUN_ID --registry outputs/my_registry.jsonl
+uv run water-agent-lab compare-runs --run-id ORIGINAL_RUN_ID --reproduced-run-id REPRODUCED_RUN_ID --registry outputs/my_registry.jsonl
+```
