@@ -439,6 +439,14 @@ uv run pytest
 
 ---
 
+
+## Data sources
+
+Current scenarios are synthetic YAML files. WaterAgentLab includes a data-source abstraction so future versions can generate scenarios from real drought and hydrological data sources.
+
+Potential future sources include VigiEau drought restriction data and Hub’Eau hydrometry or groundwater APIs.
+
+
 ## Design notes
 
 The main branch is kept deterministic because reproducibility matters for this kind of simulation. Before adding LLM agents, it is useful to have a baseline where every run can be tested and compared exactly.
@@ -462,12 +470,6 @@ Possible next steps include:
 * More detailed model behavior inspection
 
 ---
-
-## Project status
-
-WaterAgentLab is a research and portfolio project.
-
-It is not intended for real drought policy decisions, emergency water management, or automated allocation of public resources. Its purpose is to explore simulation architecture, stakeholder negotiation, reproducibility, and future LLM-agent extensions.
 
 ```
 ```
