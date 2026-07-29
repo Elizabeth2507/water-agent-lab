@@ -1293,3 +1293,39 @@ def test_export_scenario_from_data_rejects_unknown_source(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_exported_data_source_scenario_can_be_used_by_simulate_command(
+    tmp_path,
+) -> None:
+    generated_config = tmp_path / "generated_hubeau.yaml"
+
+    export_result = runner.invoke(
+        app,
+        [
+            "export-scenario-from-data",
+            "--source",
+            "hubeau-sample",
+            "--path",
+            "data/sample_hubeau/occitanie_hydrometry_sample.json",
+            "--output",
+            str(generated_config),
+        ],
+    )
+
+    assert export_result.exit_code == 0
+    assert generated_config.exists()
+
+    simulate_result = runner.invoke(
+        app,
+        [
+            "simulate",
+            "--config",
+            str(generated_config),
+            "--strategy",
+            "minimum-first",
+        ],
+    )
+
+    assert simulate_result.exit_code == 0
+    assert "occitanie_severe_hubeau_hydrometry_sample" in simulate_result.stdout

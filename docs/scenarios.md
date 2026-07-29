@@ -317,6 +317,20 @@ uv run water-agent-lab simulate --config configs/generated_hubeau_occitanie.yaml
 ```
 
 
+## End-to-end generated scenario workflow
+
+A generated scenario can be used exactly like a hand-written scenario config.
+
+Example:
+
+```bash
+uv run water-agent-lab export-scenario-from-data \
+  --source hubeau-sample \
+  --path data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_hubeau_occitanie.yaml
+```
+
+
 ## Notes for future real-data scenarios
 
 Current scenarios are synthetic. Future versions may include fields for:
