@@ -54,6 +54,10 @@ from water_agent_lab.data_sources import (
     VigiEauDataSource,
     HubEauHydrometryDataSource,
 )
+from water_agent_lab.data_source_registry import (
+    get_data_source,
+    get_data_source_names,
+)
 
 
 app = typer.Typer(
@@ -1667,6 +1671,55 @@ def load_hubeau_sample(
     table.add_row("Station label", str(raw_response.get("station_label", "")))
     table.add_row("Observed flow", str(raw_response.get("observed_flow_m3s", "")))
     table.add_row("Normal flow", str(raw_response.get("normal_flow_m3s", "")))
+    table.add_row("Scenario name", scenario.scenario_name)
+    table.add_row("Country", scenario.country)
+    table.add_row("Region", scenario.region)
+    table.add_row("Drought level", scenario.drought_level)
+    table.add_row("Available water", f"{scenario.available_water:.2f}")
+    table.add_row("Stakeholders", str(len(scenario.stakeholders)))
+
+    console.print(table)
+
+
+@app.command("load-data-source")
+def load_data_source(
+    source: Annotated[
+        str,
+        typer.Option(
+            "--source",
+            help="Data source name.",
+        ),
+    ],
+    path: Annotated[
+        Path,
+        typer.Option(
+            "--path",
+            help="Path to the data source file.",
+        ),
+    ],
+) -> None:
+    """
+    Load a registered data source and show the generated scenario.
+    """
+    try:
+        data_source = get_data_source(source_name=source, path=path)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    metadata = data_source.metadata()
+    scenario = data_source.load_scenario()
+
+    table = Table(title="Registered Data Source")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Source", source)
+    table.add_row("Available sources", ", ".join(get_data_source_names()))
+    table.add_row("Source name", metadata.source_name)
+    table.add_row("Source type", metadata.source_type)
+    table.add_row("Source path", str(metadata.source_path))
+    table.add_row("Source URL", str(metadata.source_url))
     table.add_row("Scenario name", scenario.scenario_name)
     table.add_row("Country", scenario.country)
     table.add_row("Region", scenario.region)

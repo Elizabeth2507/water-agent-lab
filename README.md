@@ -52,6 +52,7 @@ WaterAgentLab currently supports:
 - Tests, formatting, and linting with `pytest` and `ruff`
 - Mock real-data adapter for future drought data integration
 - VigiEau sample data-source skeleton
+- Unified data-source registry
 
 ---
 

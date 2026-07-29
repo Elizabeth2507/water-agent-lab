@@ -390,8 +390,36 @@ Load a simplified Hub’Eau hydrometry-style sample response and show the genera
 uv run water-agent-lab load-hubeau-sample --sample data/sample_hubeau/occitanie_hydrometry_sample.json
 ```
 
----
 
+### `load-data-source`
+
+Load any registered data source and show the generated scenario.
+
+Synthetic YAML source:
+
+```bash
+uv run water-agent-lab load-data-source --source synthetic --path configs/drought_mvp.yaml
+```
+
+Mock drought snapshot:
+
+```bash
+uv run water-agent-lab load-data-source --source mock --path data/mock/occitanie_drought_snapshot.json
+```
+
+VigiEau sample:
+
+```bash
+uv run water-agent-lab load-data-source --source vigieau-sample --path data/sample_vigieau/occitanie_restrictions_sample.json
+```
+
+Hub’Eau hydrometry sample:
+
+```bash
+uv run water-agent-lab load-data-source --source hubeau-sample --path data/sample_hubeau/occitanie_hydrometry_sample.json
+```
+
+---
 
 ## Version
 

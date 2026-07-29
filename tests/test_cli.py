@@ -1161,3 +1161,70 @@ def test_load_vigieau_sample_command() -> None:
     assert "VigiEau Sample Data Source" in result.stdout
     assert "Occitanie" in result.stdout
     assert "extreme" in result.stdout
+
+
+def test_load_hubeau_sample_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "load-hubeau-sample",
+            "--sample",
+            "data/sample_hubeau/occitanie_hydrometry_sample.json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Hub'Eau Hydrometry Sample Data Source" in result.stdout
+    assert "Occitanie" in result.stdout
+    assert "severe" in result.stdout
+
+
+def test_load_data_source_command_for_mock_source() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "load-data-source",
+            "--source",
+            "mock",
+            "--path",
+            "data/mock/occitanie_drought_snapshot.json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Registered Data Source" in result.stdout
+    assert "mock" in result.stdout
+    assert "Occitanie" in result.stdout
+
+
+def test_load_data_source_command_for_vigieau_sample() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "load-data-source",
+            "--source",
+            "vigieau-sample",
+            "--path",
+            "data/sample_vigieau/occitanie_restrictions_sample.json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Registered Data Source" in result.stdout
+    assert "vigieau-sample" in result.stdout
+    assert "extreme" in result.stdout
+
+
+def test_load_data_source_command_rejects_unknown_source() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "load-data-source",
+            "--source",
+            "unknown-source",
+            "--path",
+            "configs/drought_mvp.yaml",
+        ],
+    )
+
+    assert result.exit_code != 0

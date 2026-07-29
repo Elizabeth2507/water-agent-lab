@@ -282,6 +282,18 @@ Example sample file:
 data/sample_hubeau/occitanie_hydrometry_sample.json
 ```
 
+## Registered data sources
+
+WaterAgentLab includes a unified data-source registry.
+
+Available source names include:
+
+```text
+synthetic
+mock
+vigieau-sample
+hubeau-sample
+
 
 ## Notes for future real-data scenarios
 
