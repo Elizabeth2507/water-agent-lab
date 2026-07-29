@@ -53,6 +53,7 @@ WaterAgentLab currently supports:
 - Mock real-data adapter for future drought data integration
 - VigiEau sample data-source skeleton
 - Unified data-source registry
+- Scenario export from registered data sources
 
 ---
 
@@ -472,6 +473,17 @@ uv run water-agent-lab load-hubeau-sample --sample data/sample_hubeau/occitanie_
 This is currently a local sample-based skeleton. It prepares the project for future integration with river-flow or hydrometric data.
 ```
 
+
+Export a generated scenario from a data source:
+
+```bash
+uv run water-agent-lab export-scenario-from-data \
+  --source hubeau-sample \
+  --path data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_hubeau_occitanie.yaml
+```
+
+The generated YAML file can then be used with simulate, compare, run-all, or negotiate-multi.
 
 
 ## Design notes

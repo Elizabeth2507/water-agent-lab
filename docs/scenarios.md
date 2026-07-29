@@ -293,6 +293,28 @@ synthetic
 mock
 vigieau-sample
 hubeau-sample
+```
+
+
+## Export scenarios from data sources
+
+Registered data sources can be converted into normal YAML scenario configs.
+
+Example:
+
+```bash
+uv run water-agent-lab export-scenario-from-data \
+  --source hubeau-sample \
+  --path data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_hubeau_occitanie.yaml
+  ```
+
+
+The exported scenario can then be validated and used by the existing simulation commands:
+```bash
+uv run water-agent-lab validate-config --config configs/generated_hubeau_occitanie.yaml
+uv run water-agent-lab simulate --config configs/generated_hubeau_occitanie.yaml --strategy minimum-first
+```
 
 
 ## Notes for future real-data scenarios

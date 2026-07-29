@@ -58,6 +58,7 @@ from water_agent_lab.data_source_registry import (
     get_data_source,
     get_data_source_names,
 )
+from water_agent_lab.scenario_exporter import save_scenario_yaml
 
 
 app = typer.Typer(
@@ -1728,6 +1729,71 @@ def load_data_source(
     table.add_row("Stakeholders", str(len(scenario.stakeholders)))
 
     console.print(table)
+
+
+@app.command("export-scenario-from-data")
+def export_scenario_from_data(
+    source: Annotated[
+        str,
+        typer.Option(
+            "--source",
+            help="Data source name.",
+        ),
+    ],
+    path: Annotated[
+        Path,
+        typer.Option(
+            "--path",
+            help="Path to the data source file.",
+        ),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the generated scenario YAML.",
+        ),
+    ],
+) -> None:
+    """
+    Export a generated scenario from a registered data source to YAML.
+    """
+    if output.suffix not in {".yaml", ".yml"}:
+        raise typer.BadParameter("Output scenario file must end with .yaml or .yml.")
+
+    try:
+        data_source = get_data_source(source_name=source, path=path)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    scenario = data_source.load_scenario()
+    metadata = data_source.metadata()
+
+    save_scenario_yaml(
+        scenario=scenario,
+        output_path=output,
+    )
+
+    table = Table(title="Exported Scenario from Data Source")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Source", source)
+    table.add_row("Available sources", ", ".join(get_data_source_names()))
+    table.add_row("Source name", metadata.source_name)
+    table.add_row("Source type", metadata.source_type)
+    table.add_row("Scenario name", scenario.scenario_name)
+    table.add_row("Country", scenario.country)
+    table.add_row("Region", scenario.region)
+    table.add_row("Drought level", scenario.drought_level)
+    table.add_row("Available water", f"{scenario.available_water:.2f}")
+    table.add_row("Stakeholders", str(len(scenario.stakeholders)))
+    table.add_row("Output", str(output))
+
+    console.print(table)
+    console.print(f"[green]Saved generated scenario to {output}[/green]")
 
 
 @app.command("version")

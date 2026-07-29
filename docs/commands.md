@@ -419,6 +419,25 @@ Hub’Eau hydrometry sample:
 uv run water-agent-lab load-data-source --source hubeau-sample --path data/sample_hubeau/occitanie_hydrometry_sample.json
 ```
 
+
+### `export-scenario-from-data`
+
+Export a generated scenario from a registered data source to YAML.
+
+```bash
+uv run water-agent-lab export-scenario-from-data \
+  --source hubeau-sample \
+  --path data/sample_hubeau/occitanie_hydrometry_sample.json \
+  --output configs/generated_hubeau_occitanie.yaml
+```
+
+Then run the generated scenario:
+
+```bash
+uv run water-agent-lab simulate --config configs/generated_hubeau_occitanie.yaml --strategy minimum-first
+```
+
+
 ---
 
 ## Version

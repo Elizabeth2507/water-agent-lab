@@ -1228,3 +1228,68 @@ def test_load_data_source_command_rejects_unknown_source() -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_export_scenario_from_data_command(tmp_path) -> None:
+    output_path = tmp_path / "generated_hubeau.yaml"
+
+    result = runner.invoke(
+        app,
+        [
+            "export-scenario-from-data",
+            "--source",
+            "hubeau-sample",
+            "--path",
+            "data/sample_hubeau/occitanie_hydrometry_sample.json",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Exported Scenario from Data Source" in result.stdout
+    assert "Saved generated scenario" in result.stdout
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "occitanie_severe_hubeau_hydrometry_sample" in content
+    assert "stakeholders" in content
+
+
+def test_export_scenario_from_data_rejects_invalid_suffix(tmp_path) -> None:
+    output_path = tmp_path / "generated_scenario.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "export-scenario-from-data",
+            "--source",
+            "mock",
+            "--path",
+            "data/mock/occitanie_drought_snapshot.json",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_export_scenario_from_data_rejects_unknown_source(tmp_path) -> None:
+    output_path = tmp_path / "generated_scenario.yaml"
+
+    result = runner.invoke(
+        app,
+        [
+            "export-scenario-from-data",
+            "--source",
+            "unknown-source",
+            "--path",
+            "data/mock/occitanie_drought_snapshot.json",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
