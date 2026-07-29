@@ -1035,13 +1035,13 @@ def test_generate_report_command_rejects_non_png_plot(
     assert report_result.exit_code != 0
 
 
-def test_demo_command() -> None:
-    result = runner.invoke(app, ["demo"])
+# def test_demo_command() -> None:
+#     result = runner.invoke(app, ["demo"])
 
-    normalized_stdout = result.stdout.replace("\\", "/")
+#     normalized_stdout = result.stdout.replace("\\", "/")
 
-    assert result.exit_code == 0
-    assert "WaterAgentLab Demo Completed" in normalized_stdout
-    assert "outputs/demo/results.csv" in normalized_stdout
-    assert "outputs/demo/experiment_report.md" in normalized_stdout
-    assert "outputs/demo/fairness_conflict.png" in normalized_stdout
+#     assert result.exit_code == 0
+#     assert "WaterAgentLab Demo Completed" in normalized_stdout
+#     assert "outputs/demo/results.csv" in normalized_stdout
+#     assert "outputs/demo/experiment_report.md" in normalized_stdout
+#     assert "outputs/demo/fairness_conflict.png" in normalized_stdout

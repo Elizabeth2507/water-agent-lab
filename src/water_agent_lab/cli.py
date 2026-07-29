@@ -1388,15 +1388,23 @@ def run_experiment(
 
 
 @app.command("demo")
-def demo() -> None:
+def demo(
+    output_dir: Annotated[
+        Path,
+        typer.Option(
+            "--output-dir",
+            help="Directory where demo outputs will be saved.",
+        ),
+    ] = Path("outputs/demo"),
+) -> None:
     """
-    Run a complete demo experiment with default demo output paths.
+    Run a complete demo experiment with configurable demo output paths.
     """
     config_dir = Path("configs")
-    results = Path("outputs/demo/results.csv")
-    report = Path("outputs/demo/experiment_report.md")
-    plot = Path("outputs/demo/fairness_conflict.png")
-    registry = Path("outputs/demo/experiment_registry.jsonl")
+    results = output_dir / "results.csv"
+    report = output_dir / "experiment_report.md"
+    plot = output_dir / "fairness_conflict.png"
+    registry = output_dir / "experiment_registry.jsonl"
 
     run_metadata = create_run_metadata(command="demo")
 
