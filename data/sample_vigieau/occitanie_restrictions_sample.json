@@ -1,0 +1,32 @@
+{
+  "source_name": "vigieau_sample",
+  "country": "France",
+  "region": "Occitanie",
+  "drought_level": "crise",
+  "restriction_level": "crise",
+  "available_water_proxy": 60.0,
+  "max_rounds": 5,
+  "profiles": {
+    "agriculture": {
+      "restriction_status": "restricted",
+      "priority": 0.8
+    },
+    "urban": {
+      "restriction_status": "restricted",
+      "priority": 0.95
+    },
+    "industry": {
+      "restriction_status": "restricted",
+      "priority": 0.5
+    },
+    "ecosystem": {
+      "restriction_status": "protected",
+      "priority": 1.0
+    }
+  },
+  "restriction_order": {
+    "start_date": "2026-07-01",
+    "end_date": null,
+    "pdf_url": "https://example.com/sample-restriction-order.pdf"
+  }
+}

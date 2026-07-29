@@ -51,6 +51,7 @@ WaterAgentLab currently supports:
 - Project health check command
 - Tests, formatting, and linting with `pytest` and `ruff`
 - Mock real-data adapter for future drought data integration
+- VigiEau sample data-source skeleton
 
 ---
 
@@ -452,6 +453,13 @@ WaterAgentLab includes a mock drought JSON snapshot adapter:
 ```bash
 uv run water-agent-lab load-mock-data --snapshot data/mock/occitanie_drought_snapshot.json
 ```
+
+WaterAgentLab also includes a VigiEau sample adapter:
+
+```bash
+uv run water-agent-lab load-vigieau-sample --sample data/sample_vigieau/occitanie_restrictions_sample.json
+```
+
 
 ## Design notes
 

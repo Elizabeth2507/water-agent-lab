@@ -49,8 +49,7 @@ from water_agent_lab.run_comparison import compare_output_files
 from water_agent_lab.dashboard import summarize_registry
 from water_agent_lab.cleanup import demo_output_exists, remove_demo_output
 from water_agent_lab.doctor import check_project_health, project_health_passed
-
-from water_agent_lab.data_sources import MockDroughtDataSource
+from water_agent_lab.data_sources import MockDroughtDataSource, VigiEauDataSource
 
 
 app = typer.Typer(
@@ -1585,6 +1584,43 @@ def load_mock_data(
     table.add_row("Source name", metadata.source_name)
     table.add_row("Source type", metadata.source_type)
     table.add_row("Source path", str(metadata.source_path))
+    table.add_row("Scenario name", scenario.scenario_name)
+    table.add_row("Country", scenario.country)
+    table.add_row("Region", scenario.region)
+    table.add_row("Drought level", scenario.drought_level)
+    table.add_row("Available water", f"{scenario.available_water:.2f}")
+    table.add_row("Stakeholders", str(len(scenario.stakeholders)))
+
+    console.print(table)
+
+
+@app.command("load-vigieau-sample")
+def load_vigieau_sample(
+    sample: Annotated[
+        Path,
+        typer.Option(
+            "--sample",
+            help="Path to a simplified VigiEau-style sample JSON response.",
+        ),
+    ] = Path("data/sample_vigieau/occitanie_restrictions_sample.json"),
+) -> None:
+    """
+    Load a simplified VigiEau-style sample response and show the generated scenario.
+    """
+    data_source = VigiEauDataSource(sample_response_path=sample)
+
+    metadata = data_source.metadata()
+    scenario = data_source.load_scenario()
+
+    table = Table(title="VigiEau Sample Data Source")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Source name", metadata.source_name)
+    table.add_row("Source type", metadata.source_type)
+    table.add_row("Source URL", str(metadata.source_url))
+    table.add_row("Sample path", str(metadata.source_path))
     table.add_row("Scenario name", scenario.scenario_name)
     table.add_row("Country", scenario.country)
     table.add_row("Region", scenario.region)

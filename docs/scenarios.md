@@ -250,6 +250,17 @@ data/mock/occitanie_drought_snapshot.json
 ```
 
 
+## VigiEau sample adapter
+
+WaterAgentLab includes a skeleton adapter for simplified VigiEau-style drought restriction data.
+
+Example sample file:
+
+```text
+data/sample_vigieau/occitanie_restrictions_sample.json
+```
+
+
 ## Notes for future real-data scenarios
 
 Current scenarios are synthetic. Future versions may include fields for:

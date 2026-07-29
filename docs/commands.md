@@ -365,7 +365,16 @@ Load a mock drought JSON snapshot and show the generated scenario.
 uv run water-agent-lab load-mock-data --snapshot data/mock/occitanie_drought_snapshot.json
 ```
 
+### `load-vigieau-sample`
+
+Load a simplified VigiEau-style sample response and show the generated scenario.
+
+```bash
+uv run water-agent-lab load-vigieau-sample --sample data/sample_vigieau/occitanie_restrictions_sample.json
+```
+
 ---
+
 
 ## Version
 

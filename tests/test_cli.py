@@ -1145,3 +1145,19 @@ def test_load_mock_data_command() -> None:
     assert "Mock Drought Data Source" in result.stdout
     assert "Occitanie" in result.stdout
     assert "severe" in result.stdout
+
+
+def test_load_vigieau_sample_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "load-vigieau-sample",
+            "--sample",
+            "data/sample_vigieau/occitanie_restrictions_sample.json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "VigiEau Sample Data Source" in result.stdout
+    assert "Occitanie" in result.stdout
+    assert "extreme" in result.stdout
