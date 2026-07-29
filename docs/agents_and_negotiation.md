@@ -343,6 +343,24 @@ The current negotiation loop also uses fixed revision rules rather than learned 
 
 ---
 
+## Generic agent models
+
+WaterAgentLab now includes generic agent models that prepare the project for future LLM-based agents.
+
+The main models are:
+
+| Model | Purpose |
+|---|---|
+| `AgentProfile` | Stable identity, role, goals, constraints, and negotiation style. |
+| `AgentState` | Mutable state such as frustration, trust, concessions, and last status. |
+| `AgentMessage` | Structured message exchanged between agents. |
+| `AgentDecision` | Structured decision produced by an agent after evaluating a proposal. |
+
+These models are useful because they allow both rule-based agents and future LLM agents to produce validated, comparable outputs.
+
+A future LLM stakeholder agent should not return only free text. It should return a validated `AgentDecision`.
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
