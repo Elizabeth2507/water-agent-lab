@@ -1129,3 +1129,19 @@ def test_doctor_command_fails_for_missing_config_dir(tmp_path) -> None:
 
     assert result.exit_code != 0
     assert "Project health check failed" in result.stdout
+
+
+def test_load_mock_data_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "load-mock-data",
+            "--snapshot",
+            "data/mock/occitanie_drought_snapshot.json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Mock Drought Data Source" in result.stdout
+    assert "Occitanie" in result.stdout
+    assert "severe" in result.stdout

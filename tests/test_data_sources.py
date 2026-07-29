@@ -1,4 +1,11 @@
-from water_agent_lab.data_sources import SyntheticScenarioDataSource
+from pathlib import Path
+
+import pytest
+
+from water_agent_lab.data_sources import (
+    MockDroughtDataSource,
+    SyntheticScenarioDataSource,
+)
 
 
 def test_synthetic_scenario_data_source_loads_config() -> None:
@@ -18,3 +25,46 @@ def test_synthetic_scenario_data_source_metadata() -> None:
     assert metadata.source_name == "synthetic_yaml"
     assert metadata.source_type == "local_yaml"
     assert metadata.source_path == "configs/drought_mvp.yaml"
+
+
+def test_mock_drought_data_source_loads_snapshot() -> None:
+    data_source = MockDroughtDataSource("data/mock/occitanie_drought_snapshot.json")
+
+    raw_snapshot = data_source.load_raw_snapshot()
+
+    assert raw_snapshot["country"] == "France"
+    assert raw_snapshot["region"] == "Occitanie"
+    assert raw_snapshot["drought_level"] == "severe"
+
+
+def test_mock_drought_data_source_loads_scenario() -> None:
+    data_source = MockDroughtDataSource("data/mock/occitanie_drought_snapshot.json")
+
+    scenario = data_source.load_scenario()
+
+    assert scenario.scenario_name == "occitanie_severe_mock_snapshot"
+    assert scenario.country == "France"
+    assert scenario.region == "Occitanie"
+    assert scenario.drought_level == "severe"
+    assert scenario.available_water == 80.0
+    assert len(scenario.stakeholders) == 4
+
+
+def test_mock_drought_data_source_metadata() -> None:
+    data_source = MockDroughtDataSource("data/mock/occitanie_drought_snapshot.json")
+
+    metadata = data_source.metadata()
+
+    assert metadata.source_name == "mock_drought_snapshot"
+    assert metadata.source_type == "local_json_snapshot"
+    assert metadata.source_path == "data/mock/occitanie_drought_snapshot.json"
+
+
+def test_mock_drought_data_source_rejects_non_object_json(tmp_path: Path) -> None:
+    snapshot_path = tmp_path / "bad_snapshot.json"
+    snapshot_path.write_text("[1, 2, 3]", encoding="utf-8")
+
+    data_source = MockDroughtDataSource(snapshot_path)
+
+    with pytest.raises(ValueError):
+        data_source.load_raw_snapshot()

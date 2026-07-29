@@ -8,3 +8,13 @@ wheels/
 
 # Virtual environments
 .venv
+
+.pytest_cache/
+.ruff_cache/
+.env
+outputs/
+wandb/
+mlruns/
+.DS_Store
+.idea/
+.vscode/

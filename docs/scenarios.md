@@ -238,6 +238,18 @@ uv run water-agent-lab simulate --config configs/my_new_scenario.yaml --strategy
 
 ---
 
+
+## Mock drought snapshots
+
+WaterAgentLab also includes a mock JSON drought snapshot format.
+
+Example:
+
+```text
+data/mock/occitanie_drought_snapshot.json
+```
+
+
 ## Notes for future real-data scenarios
 
 Current scenarios are synthetic. Future versions may include fields for:

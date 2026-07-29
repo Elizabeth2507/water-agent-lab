@@ -356,6 +356,17 @@ uv run water-agent-lab validate-config --config configs/drought_mvp.yaml
 
 ---
 
+
+### `load-mock-data`
+
+Load a mock drought JSON snapshot and show the generated scenario.
+
+```bash
+uv run water-agent-lab load-mock-data --snapshot data/mock/occitanie_drought_snapshot.json
+```
+
+---
+
 ## Version
 
 ### `version`

@@ -50,6 +50,8 @@ from water_agent_lab.dashboard import summarize_registry
 from water_agent_lab.cleanup import demo_output_exists, remove_demo_output
 from water_agent_lab.doctor import check_project_health, project_health_passed
 
+from water_agent_lab.data_sources import MockDroughtDataSource
+
 
 app = typer.Typer(
     help="WaterAgentLab command-line interface.",
@@ -1555,6 +1557,42 @@ def doctor(
     else:
         console.print("[red]Project health check failed.[/red]")
         raise typer.Exit(code=1)
+
+
+@app.command("load-mock-data")
+def load_mock_data(
+    snapshot: Annotated[
+        Path,
+        typer.Option(
+            "--snapshot",
+            help="Path to a mock drought JSON snapshot.",
+        ),
+    ] = Path("data/mock/occitanie_drought_snapshot.json"),
+) -> None:
+    """
+    Load a mock drought data snapshot and show the generated scenario.
+    """
+    data_source = MockDroughtDataSource(snapshot)
+
+    metadata = data_source.metadata()
+    scenario = data_source.load_scenario()
+
+    table = Table(title="Mock Drought Data Source")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Source name", metadata.source_name)
+    table.add_row("Source type", metadata.source_type)
+    table.add_row("Source path", str(metadata.source_path))
+    table.add_row("Scenario name", scenario.scenario_name)
+    table.add_row("Country", scenario.country)
+    table.add_row("Region", scenario.region)
+    table.add_row("Drought level", scenario.drought_level)
+    table.add_row("Available water", f"{scenario.available_water:.2f}")
+    table.add_row("Stakeholders", str(len(scenario.stakeholders)))
+
+    console.print(table)
 
 
 @app.command("version")

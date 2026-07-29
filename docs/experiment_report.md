@@ -5,7 +5,7 @@ This report summarizes allocation strategy results produced by WaterAgentLab.
 ## Input file
 
 ```text
-outputs\all_results.csv
+outputs\results.csv
 ```
 
 ## Overview
@@ -44,12 +44,18 @@ The best strategy is selected by:
 3. Higher fairness score
 4. Lower shortage score
 
-| scenario_name        | drought_level   |   available_water | strategy      |   total_requested |   total_allocated | water_budget_valid   |   fairness_score |   conflict_score | agreement_reached   |   minimum_satisfaction_score |   shortage_score |
-|:---------------------|:----------------|------------------:|:--------------|------------------:|------------------:|:---------------------|-----------------:|-----------------:|:--------------------|-----------------------------:|-----------------:|
-| extreme_drought      | extreme         |                60 | proportional  |               130 |                60 | True                 |            0.462 |             1    | False               |                        0.63  |            0.538 |
-| mild_drought         | mild            |               120 | minimum-first |               130 |               120 | True                 |            0.926 |             0    | True                |                        1     |            0.077 |
-| moderate_drought_mvp | moderate        |               100 | minimum-first |               130 |               100 | True                 |            0.779 |             0    | True                |                        1     |            0.231 |
-| severe_drought       | severe          |                80 | proportional  |               130 |                80 | True                 |            0.615 |             0.75 | False               |                        0.833 |            0.385 |
+| run_id                               | created_at_utc                   | command        | scenario_name        | drought_level   |   available_water | strategy      |   total_requested |   total_allocated | water_budget_valid   |   fairness_score |   conflict_score |   minimum_satisfaction_score |   shortage_score | agreement_reached   |
+|:-------------------------------------|:---------------------------------|:---------------|:---------------------|:----------------|------------------:|:--------------|------------------:|------------------:|:---------------------|-----------------:|-----------------:|-----------------------------:|-----------------:|:--------------------|
+| fa8a259c-f0e0-47fa-b6c9-49185adc6569 | 2026-07-29T00:16:21.754821+00:00 | run-experiment | extreme_drought      | extreme         |                60 | proportional  |               130 |                60 | True                 |            0.462 |             1    |                        0.63  |            0.538 | False               |
+| fa8a259c-f0e0-47fa-b6c9-49185adc6569 | 2026-07-29T00:16:21.754821+00:00 | run-experiment | mild_drought         | mild            |               120 | minimum-first |               130 |               120 | True                 |            0.926 |             0    |                        1     |            0.077 | True                |
+| fa8a259c-f0e0-47fa-b6c9-49185adc6569 | 2026-07-29T00:16:21.754821+00:00 | run-experiment | moderate_drought_mvp | moderate        |               100 | minimum-first |               130 |               100 | True                 |            0.779 |             0    |                        1     |            0.231 | True                |
+| fa8a259c-f0e0-47fa-b6c9-49185adc6569 | 2026-07-29T00:16:21.754821+00:00 | run-experiment | severe_drought       | severe          |                80 | proportional  |               130 |                80 | True                 |            0.615 |             0.75 |                        0.833 |            0.385 | False               |
+
+## Plots
+
+The plot below compares fairness and conflict scores across scenarios and allocation strategies.
+
+![Fairness and conflict comparison](../outputs/report_fairness_conflict.png)
 
 ## Interpretation guide
 

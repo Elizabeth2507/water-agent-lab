@@ -50,6 +50,7 @@ WaterAgentLab currently supports:
 - Safe cleanup command for demo outputs
 - Project health check command
 - Tests, formatting, and linting with `pytest` and `ruff`
+- Mock real-data adapter for future drought data integration
 
 ---
 
@@ -446,6 +447,11 @@ Current scenarios are synthetic YAML files. WaterAgentLab includes a data-source
 
 Potential future sources include VigiEau drought restriction data and Hub’Eau hydrometry or groundwater APIs.
 
+WaterAgentLab includes a mock drought JSON snapshot adapter:
+
+```bash
+uv run water-agent-lab load-mock-data --snapshot data/mock/occitanie_drought_snapshot.json
+```
 
 ## Design notes
 
