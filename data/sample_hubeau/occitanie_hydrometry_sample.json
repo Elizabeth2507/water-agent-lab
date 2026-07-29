@@ -1,0 +1,26 @@
+{
+  "source_name": "hubeau_hydrometry_sample",
+  "country": "France",
+  "region": "Occitanie",
+  "station_code": "Y123456789",
+  "station_label": "Sample river station - Occitanie",
+  "hydrometry_status": "low_flow",
+  "observed_flow_m3s": 12.5,
+  "normal_flow_m3s": 35.0,
+  "available_water_proxy": 70.0,
+  "max_rounds": 5,
+  "stakeholder_profile": {
+    "agriculture": {
+      "priority": 0.8
+    },
+    "urban": {
+      "priority": 0.95
+    },
+    "industry": {
+      "priority": 0.5
+    },
+    "ecosystem": {
+      "priority": 1.0
+    }
+  }
+}
