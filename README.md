@@ -1,8 +1,3 @@
-Yes, you’re right. The previous version is clean, but it sounds a bit too polished and “template-like”. For GitHub, it should feel more like a real project README: clear, practical, not over-selling, and not repeating the same idea too many times.
-
-Use this version instead.
-
-````markdown
 # WaterAgentLab
 
 WaterAgentLab is a Python project for simulating water-resource allocation during drought.
