@@ -19,6 +19,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - [Scenario configuration guide](docs/scenarios.md)
 - [Metrics guide](docs/metrics.md)
 - [Allocation strategies guide](docs/strategies.md)
+- [Agents and negotiation guide](docs/agents_and_negotiation.md)
 - [Experiment results](docs/results.md)
 
 ## Current features
