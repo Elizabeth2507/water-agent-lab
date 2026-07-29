@@ -165,4 +165,4 @@ def test_generate_experiment_report_with_plot(tmp_path: Path) -> None:
 
     assert "## Plots" in content
     assert "Fairness and conflict comparison" in content
-    assert "fairness_conflict.png" in content   
+    assert "fairness_conflict.png" in content
