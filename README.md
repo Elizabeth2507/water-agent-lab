@@ -35,6 +35,8 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Terminal dashboard for experiment registry summaries
 - End-to-end experiment pipeline command
 - One-command demo workflow
+- Safe demo cleanup command
+
 
 ## Planned extensions
 
@@ -72,11 +74,30 @@ Run the complete demo workflow:
 uv run water-agent-lab demo
 ```
 
+Choose a custom demo output directory:
+
+```bash
+uv run water-agent-lab demo --output-dir outputs/custom_demo
+```
+
 After running the demo, inspect the registry:
 
 ```bash
 uv run water-agent-lab dashboard --registry outputs/demo/experiment_registry.jsonl
 ```
+
+Clean demo outputs with a dry run:
+
+```bash
+uv run water-agent-lab clean-demo --output-dir outputs/custom_demo
+```
+
+Actually remove the demo output directory:
+
+```bash
+uv run water-agent-lab clean-demo --output-dir outputs/custom_demo --yes
+```
+
 
 ## Usage
 

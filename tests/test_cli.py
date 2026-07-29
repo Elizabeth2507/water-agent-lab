@@ -1045,3 +1045,59 @@ def test_generate_report_command_rejects_non_png_plot(
 #     assert "outputs/demo/results.csv" in normalized_stdout
 #     assert "outputs/demo/experiment_report.md" in normalized_stdout
 #     assert "outputs/demo/fairness_conflict.png" in normalized_stdout
+
+
+def test_clean_demo_dry_run_does_not_delete_directory(tmp_path) -> None:
+    output_dir = tmp_path / "demo"
+    output_dir.mkdir()
+    (output_dir / "results.csv").write_text("test", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "clean-demo",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_dir.exists()
+    assert "Dry run only" in result.stdout
+    assert "Would remove" in result.stdout
+
+
+def test_clean_demo_with_yes_deletes_directory(tmp_path) -> None:
+    output_dir = tmp_path / "demo"
+    output_dir.mkdir()
+    (output_dir / "results.csv").write_text("test", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        [
+            "clean-demo",
+            "--output-dir",
+            str(output_dir),
+            "--yes",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert not output_dir.exists()
+    assert "Removed demo output directory" in result.stdout
+
+
+def test_clean_demo_missing_directory(tmp_path) -> None:
+    output_dir = tmp_path / "missing_demo"
+
+    result = runner.invoke(
+        app,
+        [
+            "clean-demo",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "does not exist" in result.stdout

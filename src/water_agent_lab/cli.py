@@ -47,6 +47,7 @@ from water_agent_lab.reproduction import (
 )
 from water_agent_lab.run_comparison import compare_output_files
 from water_agent_lab.dashboard import summarize_registry
+from water_agent_lab.cleanup import demo_output_exists, remove_demo_output
 
 
 app = typer.Typer(
@@ -1458,6 +1459,44 @@ def demo(
     console.print("\nNext commands:")
     console.print(f"uv run water-agent-lab dashboard --registry {registry}")
     console.print(f"uv run water-agent-lab list-runs --registry {registry}")
+
+
+@app.command("clean-demo")
+def clean_demo(
+    output_dir: Annotated[
+        Path,
+        typer.Option(
+            "--output-dir",
+            help="Demo output directory to remove.",
+        ),
+    ] = Path("outputs/demo"),
+    yes: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            help="Actually remove the demo output directory.",
+        ),
+    ] = False,
+) -> None:
+    """
+    Remove generated demo outputs.
+
+    Without --yes, this command only shows what would be removed.
+    """
+    if not demo_output_exists(output_dir):
+        console.print(
+            f"[yellow]Demo output directory does not exist: {output_dir}[/yellow]"
+        )
+        return
+
+    if not yes:
+        console.print("[yellow]Dry run only. No files were deleted.[/yellow]")
+        console.print(f"Would remove: {output_dir}")
+        console.print("Run again with --yes to delete this directory.")
+        return
+
+    remove_demo_output(output_dir)
+    console.print(f"[green]Removed demo output directory: {output_dir}[/green]")
 
 
 @app.command("version")
