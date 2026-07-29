@@ -12,6 +12,11 @@ WaterAgentLab is designed to explore this kind of allocation problem in a struct
 
 The long-term goal is to compare simple allocation baselines, rule-based agents, and eventually LLM-powered stakeholder negotiation.
 
+## Documentation
+
+- [Architecture overview](docs/architecture.md)
+- [Experiment results](docs/results.md)
+
 ## Current features
 
 - YAML-based drought scenario configuration
