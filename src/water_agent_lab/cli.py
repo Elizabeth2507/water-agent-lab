@@ -1387,6 +1387,71 @@ def run_experiment(
     console.print(f"[green]Recorded run: {run_metadata['run_id']}[/green]")
 
 
+@app.command("demo")
+def demo() -> None:
+    """
+    Run a complete demo experiment with default demo output paths.
+    """
+    config_dir = Path("configs")
+    results = Path("outputs/demo/results.csv")
+    report = Path("outputs/demo/experiment_report.md")
+    plot = Path("outputs/demo/fairness_conflict.png")
+    registry = Path("outputs/demo/experiment_registry.jsonl")
+
+    run_metadata = create_run_metadata(command="demo")
+
+    rows = build_run_all_rows(
+        config_dir=config_dir,
+        run_metadata=run_metadata,
+    )
+
+    save_results_csv(
+        results=rows,
+        output_path=results,
+    )
+
+    generate_experiment_report(
+        input_path=results,
+        output_path=report,
+        plot_path=plot,
+    )
+
+    config_paths = sorted(config_dir.glob("*.yaml"))
+    config_hashes = compute_config_hashes(config_paths)
+
+    append_experiment_record(
+        record={
+            **run_metadata,
+            "status": "completed",
+            "config_dir": str(config_dir),
+            "config_hashes": config_hashes,
+            "outputs": {
+                "results": str(results),
+                "report": str(report),
+                "plot": str(plot),
+            },
+        },
+        registry_path=registry,
+    )
+
+    table = Table(title="WaterAgentLab Demo Completed")
+
+    table.add_column("Output")
+    table.add_column("Path")
+
+    table.add_row("Results CSV", str(results))
+    table.add_row("Markdown report", str(report))
+    table.add_row("Plot", str(plot))
+    table.add_row("Registry", str(registry))
+    table.add_row("Run ID", run_metadata["run_id"])
+
+    console.print(table)
+
+    console.print("\nNext commands:")
+    console.print(f"uv run water-agent-lab dashboard --registry {registry}")
+    console.print(f"uv run water-agent-lab list-runs --registry {registry}")
+
+
 @app.command("version")
 def version() -> None:
     """

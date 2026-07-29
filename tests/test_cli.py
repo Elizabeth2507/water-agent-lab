@@ -920,7 +920,7 @@ def test_run_experiment_command(tmp_path) -> None:
 
     results_path = tmp_path / "results.csv"
     report_path = tmp_path / "report.md"
-    # plot_path = tmp_path / "report_plot.png"
+    plot_path = tmp_path / "report_plot.png"
     registry_path = tmp_path / "registry.jsonl"
 
     result = runner.invoke(
@@ -933,8 +933,8 @@ def test_run_experiment_command(tmp_path) -> None:
             str(results_path),
             "--report",
             str(report_path),
-            # "--plot",
-            # str(plot_path),
+            "--plot",
+            str(plot_path),
             "--registry",
             str(registry_path),
         ],
@@ -943,7 +943,7 @@ def test_run_experiment_command(tmp_path) -> None:
     assert result.exit_code == 0
     assert results_path.exists()
     assert report_path.exists()
-    # assert plot_path.exists()
+    assert plot_path.exists()
     assert registry_path.exists()
 
     assert "Experiment pipeline completed" in result.stdout
@@ -957,7 +957,7 @@ def test_run_experiment_command(tmp_path) -> None:
     assert records[0]["command"] == "run-experiment"
     assert records[0]["outputs"]["results"] == str(results_path)
     assert records[0]["outputs"]["report"] == str(report_path)
-    # assert records[0]["outputs"]["plot"] == str(plot_path)
+    assert records[0]["outputs"]["plot"] == str(plot_path)
 
 
 def test_generate_report_command_with_plot(tmp_path: Path) -> None:
@@ -1033,3 +1033,15 @@ def test_generate_report_command_rejects_non_png_plot(
     )
 
     assert report_result.exit_code != 0
+
+
+def test_demo_command() -> None:
+    result = runner.invoke(app, ["demo"])
+
+    normalized_stdout = result.stdout.replace("\\", "/")
+
+    assert result.exit_code == 0
+    assert "WaterAgentLab Demo Completed" in normalized_stdout
+    assert "outputs/demo/results.csv" in normalized_stdout
+    assert "outputs/demo/experiment_report.md" in normalized_stdout
+    assert "outputs/demo/fairness_conflict.png" in normalized_stdout

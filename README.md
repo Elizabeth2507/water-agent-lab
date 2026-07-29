@@ -34,6 +34,7 @@ The long-term goal is to compare simple allocation baselines, rule-based agents,
 - Lightweight experiment registry for tracking exported runs
 - Terminal dashboard for experiment registry summaries
 - End-to-end experiment pipeline command
+- One-command demo workflow
 
 ## Planned extensions
 
@@ -60,6 +61,21 @@ Install dependencies:
 
 ```bash
 uv sync
+```
+
+
+## Quick demo
+
+Run the complete demo workflow:
+
+```bash
+uv run water-agent-lab demo
+```
+
+After running the demo, inspect the registry:
+
+```bash
+uv run water-agent-lab dashboard --registry outputs/demo/experiment_registry.jsonl
 ```
 
 ## Usage
