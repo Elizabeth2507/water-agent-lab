@@ -473,6 +473,26 @@ Show the package version.
 uv run water-agent-lab version
 ```
 
+### `llm-agent-responses`
+
+Run mock LLM stakeholder agents on an allocation proposal.
+
+```bash
+uv run water-agent-lab llm-agent-responses --config configs/drought_mvp.yaml --strategy proportional
+```
+
+This command does not call a real LLM yet. It uses a deterministic `MockLLMBackend` that returns validated `AgentDecision` outputs. The command tests the future LLM-agent workflow without API cost or model randomness.
+
+
+## Mock LLM stakeholder responses
+
+WaterAgentLab can run mock LLM stakeholder agents with:
+
+```bash
+uv run water-agent-lab llm-agent-responses --config configs/drought_mvp.yaml --strategy proportional
+```
+
+
 ---
 
 ## Recommended workflows

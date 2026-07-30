@@ -55,6 +55,7 @@ WaterAgentLab currently supports:
 - Unified data-source registry
 - Scenario export from registered data sources
 - Combined VigiEau + Hub’Eau sample scenario builder
+- Mock LLM stakeholder-agent workflow
 
 ---
 
@@ -506,6 +507,16 @@ uv run water-agent-lab build-combined-scenario \
   --hubeau data/sample_hubeau/occitanie_hydrometry_sample.json \
   --output configs/generated_combined_occitanie.yaml
 ```
+
+--
+## AI-agent layer
+
+WaterAgentLab includes an early AI-agent architecture with a deterministic mock LLM backend.
+
+```bash
+uv run water-agent-lab llm-agent-responses --config configs/drought_mvp.yaml --strategy proportional
+```
+
 
 
 ## Design notes

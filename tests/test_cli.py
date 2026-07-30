@@ -1371,3 +1371,36 @@ def test_build_combined_scenario_rejects_invalid_suffix(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_llm_agent_responses_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-agent-responses",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Mock LLM Stakeholder Agent Responses" in result.stdout
+    assert "agriculture" in result.stdout
+    assert "ecosystem" in result.stdout
+
+
+def test_llm_agent_responses_command_rejects_unknown_strategy() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-agent-responses",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "unknown-strategy",
+        ],
+    )
+
+    assert result.exit_code != 0

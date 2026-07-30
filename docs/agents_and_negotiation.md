@@ -384,6 +384,24 @@ Future backends:
 This design allows the same `LLMStakeholderAgent` to work with mock responses during tests and real model responses during experiments.
 
 
+## LLM stakeholder prompt structure
+
+Future LLM stakeholder agents use structured prompts instead of ad hoc free-text instructions.
+
+Each LLM decision uses two prompts:
+
+| Prompt | Purpose |
+|---|---|
+| System prompt | Defines the stakeholder identity, goals, constraints, and negotiation style. |
+| User prompt | Provides the drought scenario, allocation proposal, agent state, and required JSON schema. |
+
+The LLM is instructed to return only valid JSON.
+
+The returned text is parsed and validated as an `AgentDecision`.
+
+This keeps LLM-based agents compatible with deterministic evaluation, testing, and experiment tracking.
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

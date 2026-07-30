@@ -62,6 +62,7 @@ from water_agent_lab.scenario_exporter import save_scenario_yaml
 from water_agent_lab.combined_scenario_builder import (
     build_combined_vigieau_hubeau_scenario,
 )
+from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
 
 
 app = typer.Typer(
@@ -1860,6 +1861,55 @@ def build_combined_scenario(
 
     console.print(table)
     console.print(f"[green]Saved combined scenario to {output}[/green]")
+
+
+@app.command("llm-agent-responses")
+def llm_agent_responses(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Allocation strategy to evaluate.",
+        ),
+    ] = "proportional",
+) -> None:
+    """
+    Run mock LLM stakeholder agents on an allocation proposal.
+    """
+    scenario = load_scenario_config(config)
+    proposal = create_proposal(strategy=strategy, scenario=scenario)
+
+    decisions = run_mock_llm_stakeholder_responses(
+        scenario=scenario,
+        proposal=proposal,
+    )
+
+    table = Table(title="Mock LLM Stakeholder Agent Responses")
+
+    table.add_column("Stakeholder")
+    table.add_column("Status")
+    table.add_column("Requested extra water")
+    table.add_column("Willingness")
+    table.add_column("Argument")
+
+    for decision in decisions:
+        table.add_row(
+            decision.stakeholder_name,
+            decision.status,
+            f"{decision.requested_extra_water:.2f}",
+            f"{decision.willingness_to_compromise:.2f}",
+            decision.argument,
+        )
+
+    console.print(table)
 
 
 @app.command("version")
