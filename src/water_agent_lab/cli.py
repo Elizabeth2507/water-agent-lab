@@ -70,6 +70,9 @@ from water_agent_lab.agent_transcript import (
     save_agent_transcript_json,
 )
 from water_agent_lab.llm_negotiation import run_mock_llm_multi_round_negotiation
+from water_agent_lab.agent_memory import save_agent_memory_json
+from water_agent_lab.agent_memory_builder import build_memory_from_transcript
+from water_agent_lab.agent_transcript import load_agent_transcript_json
 
 
 app = typer.Typer(
@@ -2052,6 +2055,66 @@ def llm_negotiate_mock(
         console.print(
             f"[green]Saved mock LLM negotiation transcript to {output}[/green]"
         )
+
+
+@app.command("summarize-agent-memory")
+def summarize_agent_memory(
+    transcript: Annotated[
+        Path,
+        typer.Option(
+            "--transcript",
+            help="Path to an AI-agent negotiation transcript JSON file.",
+        ),
+    ],
+    stakeholder: Annotated[
+        str | None,
+        typer.Option(
+            "--stakeholder",
+            help="Optional stakeholder name to filter memory.",
+        ),
+    ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save extracted agent memory as JSON.",
+        ),
+    ] = None,
+) -> None:
+    """
+    Build and summarize agent memory from an AI-agent negotiation transcript.
+    """
+    if output is not None and output.suffix != ".json":
+        raise typer.BadParameter("Output memory file must end with .json.")
+
+    loaded_transcript = load_agent_transcript_json(transcript)
+    memory = build_memory_from_transcript(loaded_transcript)
+
+    summary = memory.summarize(
+        stakeholder_name=stakeholder,
+        limit=10,
+    )
+
+    table = Table(title="Agent Memory Summary")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Transcript", str(transcript))
+    table.add_row("Scenario", loaded_transcript.scenario_name)
+    table.add_row("Total memory entries", str(len(memory.entries)))
+    table.add_row("Stakeholder filter", stakeholder or "all")
+
+    console.print(table)
+    console.print(summary)
+
+    if output is not None:
+        save_agent_memory_json(
+            memory=memory,
+            output_path=output,
+        )
+        console.print(f"[green]Saved agent memory to {output}[/green]")
 
 
 @app.command("version")

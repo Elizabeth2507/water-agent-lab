@@ -1531,3 +1531,106 @@ def test_llm_negotiate_mock_command_rejects_unknown_strategy() -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_summarize_agent_memory_command(tmp_path) -> None:
+    transcript_path = tmp_path / "mock_llm_negotiation.json"
+
+    negotiation_result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(transcript_path),
+        ],
+    )
+
+    assert negotiation_result.exit_code == 0
+    assert transcript_path.exists()
+
+    memory_result = runner.invoke(
+        app,
+        [
+            "summarize-agent-memory",
+            "--transcript",
+            str(transcript_path),
+            "--stakeholder",
+            "ecosystem",
+        ],
+    )
+
+    assert memory_result.exit_code == 0
+    assert "Agent Memory Summary" in memory_result.stdout
+    assert "ecosystem" in memory_result.stdout
+
+
+def test_summarize_agent_memory_command_can_save_memory(tmp_path) -> None:
+    transcript_path = tmp_path / "mock_llm_negotiation.json"
+    memory_path = tmp_path / "agent_memory.json"
+
+    negotiation_result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(transcript_path),
+        ],
+    )
+
+    assert negotiation_result.exit_code == 0
+
+    memory_result = runner.invoke(
+        app,
+        [
+            "summarize-agent-memory",
+            "--transcript",
+            str(transcript_path),
+            "--output",
+            str(memory_path),
+        ],
+    )
+
+    assert memory_result.exit_code == 0
+    assert memory_path.exists()
+    assert "Saved agent memory" in memory_result.stdout
+
+
+def test_summarize_agent_memory_command_rejects_non_json_output(tmp_path) -> None:
+    transcript_path = tmp_path / "mock_llm_negotiation.json"
+    memory_path = tmp_path / "agent_memory.txt"
+
+    negotiation_result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(transcript_path),
+        ],
+    )
+
+    assert negotiation_result.exit_code == 0
+
+    memory_result = runner.invoke(
+        app,
+        [
+            "summarize-agent-memory",
+            "--transcript",
+            str(transcript_path),
+            "--output",
+            str(memory_path),
+        ],
+    )
+
+    assert memory_result.exit_code != 0

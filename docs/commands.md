@@ -510,6 +510,7 @@ Run a deterministic mock LLM multi-round negotiation.
 uv run water-agent-lab llm-negotiate-mock --config configs/drought_mvp.yaml --strategy proportional
 ```
 
+
 Save a transcript:
 
 ```bash
@@ -520,6 +521,33 @@ uv run water-agent-lab llm-negotiate-mock \
 ```
 
 This command uses mock LLM stakeholder agents and stores round-by-round decisions, messages, proposals, and evaluation results.
+
+
+### `summarize-agent-memory`
+
+Build and summarize agent memory from a saved AI-agent transcript.
+
+```bash
+uv run water-agent-lab summarize-agent-memory \
+  --transcript outputs/mock_llm_negotiation.json
+```
+
+Filter memory for one stakeholder:
+
+```bash
+uv run water-agent-lab summarize-agent-memory \
+  --transcript outputs/mock_llm_negotiation.json \
+  --stakeholder ecosystem
+```
+
+Save extracted memory:
+
+```bash
+uv run water-agent-lab summarize-agent-memory \
+  --transcript outputs/mock_llm_negotiation.json \
+  --output outputs/agent_memory.json
+```
+
 
 ---
 

@@ -437,6 +437,22 @@ uv run water-agent-lab llm-negotiate-mock \
 ```
 
 
+## Agent memory
+
+WaterAgentLab includes a simple structured memory model for AI-agent negotiations.
+
+The memory stores events such as:
+
+```text
+proposal
+decision
+message
+rejection
+concession
+agreement
+summary
+```
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

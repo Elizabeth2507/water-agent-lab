@@ -57,6 +57,7 @@ WaterAgentLab currently supports:
 - Combined VigiEau + Hub’Eau sample scenario builder
 - Mock LLM stakeholder-agent workflow
 - Mock LLM multi-round negotiation with transcript export
+- Structured agent memory extracted from AI-agent transcripts
 
 ---
 
@@ -527,6 +528,13 @@ uv run water-agent-lab llm-negotiate-mock \
   --strategy proportional \
   --output outputs/mock_llm_negotiation.json
   ```
+
+
+  Summarize memory from a mock LLM negotiation transcript:
+
+```bash
+uv run water-agent-lab summarize-agent-memory --transcript outputs/mock_llm_negotiation.json --stakeholder ecosystem
+```
 
 
 ## Design notes
