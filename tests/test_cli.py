@@ -1404,3 +1404,51 @@ def test_llm_agent_responses_command_rejects_unknown_strategy() -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_llm_agent_responses_command_can_save_transcript(tmp_path) -> None:
+    output_path = tmp_path / "mock_llm_transcript.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-agent-responses",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved mock LLM transcript" in result.stdout
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "moderate_drought_mvp" in content
+    assert "mock-llm" in content
+    assert "rounds" in content
+
+
+def test_llm_agent_responses_command_rejects_non_json_transcript_output(
+    tmp_path,
+) -> None:
+    output_path = tmp_path / "mock_llm_transcript.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-agent-responses",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0

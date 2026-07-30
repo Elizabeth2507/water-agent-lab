@@ -402,6 +402,30 @@ The returned text is parsed and validated as an `AgentDecision`.
 This keeps LLM-based agents compatible with deterministic evaluation, testing, and experiment tracking.
 
 
+## AI-agent transcripts
+
+Mock LLM and future Qwen-based negotiations can be saved as structured transcripts.
+
+A transcript stores:
+
+| Field | Meaning |
+|---|---|
+| Scenario metadata | Country, region, drought level, scenario name. |
+| Backend metadata | Backend name and model name. |
+| Round transcript | Strategy, allocation proposal, decisions, messages, and evaluation result. |
+| Agent decisions | Validated stakeholder decisions. |
+| Agent messages | Structured messages derived from decisions. |
+
+Example:
+
+```bash
+uv run water-agent-lab llm-agent-responses \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/mock_llm_transcript.json
+  ```
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

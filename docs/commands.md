@@ -493,6 +493,16 @@ uv run water-agent-lab llm-agent-responses --config configs/drought_mvp.yaml --s
 ```
 
 
+Save a mock LLM transcript:
+
+```bash
+uv run water-agent-lab llm-agent-responses \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/mock_llm_transcript.json
+```
+
+
 ---
 
 ## Recommended workflows

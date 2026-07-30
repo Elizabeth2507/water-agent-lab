@@ -63,6 +63,12 @@ from water_agent_lab.combined_scenario_builder import (
     build_combined_vigieau_hubeau_scenario,
 )
 from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
+from water_agent_lab.agent_message_builder import decision_to_message
+from water_agent_lab.agent_transcript import (
+    AgentNegotiationTranscript,
+    AgentRoundTranscript,
+    save_agent_transcript_json,
+)
 
 
 app = typer.Typer(
@@ -1880,6 +1886,14 @@ def llm_agent_responses(
             help="Allocation strategy to evaluate.",
         ),
     ] = "proportional",
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save the mock LLM agent transcript as JSON.",
+        ),
+    ] = None,
 ) -> None:
     """
     Run mock LLM stakeholder agents on an allocation proposal.
@@ -1891,6 +1905,50 @@ def llm_agent_responses(
         scenario=scenario,
         proposal=proposal,
     )
+
+    result = evaluate_proposal(scenario, proposal)
+
+    if output is not None:
+        if output.suffix != ".json":
+            raise typer.BadParameter("Output transcript file must end with .json.")
+
+        messages = [
+            decision_to_message(
+                decision=decision,
+                round_number=1,
+            )
+            for decision in decisions
+        ]
+
+        transcript = AgentNegotiationTranscript(
+            scenario_name=scenario.scenario_name,
+            country=scenario.country,
+            region=scenario.region,
+            drought_level=scenario.drought_level,
+            initial_strategy=strategy,
+            agreement_reached=result.agreement_reached,
+            rounds_used=1,
+            max_rounds=scenario.max_rounds,
+            backend_name="mock",
+            model_name="mock-llm",
+            rounds=[
+                AgentRoundTranscript(
+                    round_number=1,
+                    strategy=strategy,
+                    proposal=proposal,
+                    decisions=decisions,
+                    messages=messages,
+                    result=result,
+                )
+            ],
+        )
+
+        save_agent_transcript_json(
+            transcript=transcript,
+            output_path=output,
+        )
+
+        console.print(f"[green]Saved mock LLM transcript to {output}[/green]")
 
     table = Table(title="Mock LLM Stakeholder Agent Responses")
 
