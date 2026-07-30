@@ -425,6 +425,17 @@ uv run water-agent-lab llm-agent-responses \
   --output outputs/mock_llm_transcript.json
   ```
 
+## Mock LLM multi-round negotiation
+
+WaterAgentLab can run a deterministic mock LLM multi-round negotiation:
+
+```bash
+uv run water-agent-lab llm-negotiate-mock \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/mock_llm_negotiation.json
+```
+
 
 ## Future LLM-agent extension
 

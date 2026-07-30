@@ -56,6 +56,7 @@ WaterAgentLab currently supports:
 - Scenario export from registered data sources
 - Combined VigiEau + Hub’Eau sample scenario builder
 - Mock LLM stakeholder-agent workflow
+- Mock LLM multi-round negotiation with transcript export
 
 ---
 
@@ -517,6 +518,15 @@ WaterAgentLab includes an early AI-agent architecture with a deterministic mock 
 uv run water-agent-lab llm-agent-responses --config configs/drought_mvp.yaml --strategy proportional
 ```
 
+
+Run a mock LLM multi-round negotiation:
+
+```bash
+uv run water-agent-lab llm-negotiate-mock \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/mock_llm_negotiation.json
+  ```
 
 
 ## Design notes

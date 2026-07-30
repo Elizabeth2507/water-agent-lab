@@ -502,6 +502,24 @@ uv run water-agent-lab llm-agent-responses \
   --output outputs/mock_llm_transcript.json
 ```
 
+### `llm-negotiate-mock`
+
+Run a deterministic mock LLM multi-round negotiation.
+
+```bash
+uv run water-agent-lab llm-negotiate-mock --config configs/drought_mvp.yaml --strategy proportional
+```
+
+Save a transcript:
+
+```bash
+uv run water-agent-lab llm-negotiate-mock \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --output outputs/mock_llm_negotiation.json
+```
+
+This command uses mock LLM stakeholder agents and stores round-by-round decisions, messages, proposals, and evaluation results.
 
 ---
 

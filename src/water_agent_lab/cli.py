@@ -69,6 +69,7 @@ from water_agent_lab.agent_transcript import (
     AgentRoundTranscript,
     save_agent_transcript_json,
 )
+from water_agent_lab.llm_negotiation import run_mock_llm_multi_round_negotiation
 
 
 app = typer.Typer(
@@ -1968,6 +1969,89 @@ def llm_agent_responses(
         )
 
     console.print(table)
+
+
+@app.command("llm-negotiate-mock")
+def llm_negotiate_mock(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Initial allocation strategy.",
+        ),
+    ] = "proportional",
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save the mock LLM negotiation transcript.",
+        ),
+    ] = None,
+) -> None:
+    """
+    Run a deterministic mock LLM multi-round negotiation.
+    """
+    if output is not None and output.suffix != ".json":
+        raise typer.BadParameter("Output transcript file must end with .json.")
+
+    try:
+        transcript = run_mock_llm_multi_round_negotiation(
+            config_path=config,
+            initial_strategy=strategy,
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    table = Table(title="Mock LLM Multi-Round Negotiation")
+
+    table.add_column("Round")
+    table.add_column("Strategy")
+    table.add_column("Agreement")
+    table.add_column("Conflict")
+    table.add_column("Rejected")
+    table.add_column("Messages")
+
+    for round_transcript in transcript.rounds:
+        rejected = [
+            decision.stakeholder_name
+            for decision in round_transcript.decisions
+            if decision.status == "rejected"
+        ]
+
+        table.add_row(
+            str(round_transcript.round_number),
+            round_transcript.strategy,
+            str(round_transcript.result.agreement_reached),
+            f"{round_transcript.result.conflict_score:.3f}",
+            ", ".join(rejected) if rejected else "none",
+            str(len(round_transcript.messages)),
+        )
+
+    console.print(table)
+
+    console.print(f"Scenario: {transcript.scenario_name}")
+    console.print(f"Backend: {transcript.backend_name}")
+    console.print(f"Model: {transcript.model_name}")
+    console.print(f"Rounds used: {transcript.rounds_used}/{transcript.max_rounds}")
+    console.print(f"Agreement reached: {transcript.agreement_reached}")
+
+    if output is not None:
+        save_agent_transcript_json(
+            transcript=transcript,
+            output_path=output,
+        )
+        console.print(
+            f"[green]Saved mock LLM negotiation transcript to {output}[/green]"
+        )
 
 
 @app.command("version")

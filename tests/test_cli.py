@@ -1452,3 +1452,82 @@ def test_llm_agent_responses_command_rejects_non_json_transcript_output(
     )
 
     assert result.exit_code != 0
+
+
+def test_llm_negotiate_mock_command() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Mock LLM Multi-Round Negotiation" in result.stdout
+    assert "moderate_drought_mvp" in result.stdout
+    assert "mock-llm" in result.stdout
+
+
+def test_llm_negotiate_mock_command_saves_transcript(tmp_path) -> None:
+    output_path = tmp_path / "mock_llm_negotiation.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved mock LLM negotiation transcript" in result.stdout
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "moderate_drought_mvp" in content
+    assert "rounds" in content
+    assert "mock-llm" in content
+
+
+def test_llm_negotiate_mock_command_rejects_non_json_output(tmp_path) -> None:
+    output_path = tmp_path / "mock_llm_negotiation.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_llm_negotiate_mock_command_rejects_unknown_strategy() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "unknown-strategy",
+        ],
+    )
+
+    assert result.exit_code != 0
