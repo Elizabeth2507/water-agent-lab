@@ -10,6 +10,7 @@ from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
 from water_agent_lab.negotiation import choose_revision_strategy
 from water_agent_lab.strategies import get_strategy
+from water_agent_lab.agent_memory import AgentMemory
 
 
 def run_mock_llm_multi_round_negotiation(
@@ -28,6 +29,8 @@ def run_mock_llm_multi_round_negotiation(
     current_strategy = initial_strategy
     agreement_reached = False
 
+    memory = AgentMemory()
+
     for round_number in range(1, scenario.max_rounds + 1):
         strategy_function = get_strategy(current_strategy)
         proposal = strategy_function(scenario)
@@ -37,6 +40,7 @@ def run_mock_llm_multi_round_negotiation(
         decisions = run_mock_llm_stakeholder_responses(
             scenario=scenario,
             proposal=proposal,
+            memory=memory,
         )
 
         messages = [
@@ -47,9 +51,29 @@ def run_mock_llm_multi_round_negotiation(
             for decision in decisions
         ]
 
+        for decision in decisions:
+            memory.add(
+                round_number=round_number,
+                stakeholder_name=decision.stakeholder_name,
+                event_type="rejection" if decision.status == "rejected" else "decision",
+                content=decision.argument,
+                importance=0.9 if decision.status == "rejected" else 0.6,
+            )
+
+        for message in messages:
+            memory.add(
+                round_number=round_number,
+                stakeholder_name=message.sender,
+                event_type="message",
+                content=message.content,
+                importance=0.5,
+            )
+
         rejected_decisions = [
             decision for decision in decisions if decision.status == "rejected"
         ]
+
+        round_memory_summary = memory.summarize(limit=10)
 
         round_transcript = AgentRoundTranscript(
             round_number=round_number,
@@ -58,6 +82,7 @@ def run_mock_llm_multi_round_negotiation(
             decisions=decisions,
             messages=messages,
             result=result,
+            memory_summary=round_memory_summary,
         )
         rounds.append(round_transcript)
 

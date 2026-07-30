@@ -7,6 +7,7 @@ from water_agent_lab.llm_stakeholder_agent import (
     build_default_agent_profile,
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
+from water_agent_lab.agent_memory import AgentMemory
 
 
 def build_mock_decision_response_text(
@@ -56,6 +57,7 @@ def run_mock_llm_stakeholder_responses(
     scenario: ScenarioConfig,
     proposal: AllocationProposal,
     round_number: int = 1,
+    memory: AgentMemory | None = None,
 ) -> list[AgentDecision]:
     """
     Evaluate all stakeholders using LLMStakeholderAgent with MockLLMBackend.
@@ -81,12 +83,14 @@ def run_mock_llm_stakeholder_responses(
         agent = LLMStakeholderAgent(
             profile=profile,
             backend=backend,
+            memory=memory,
         )
 
         decision = agent.evaluate_allocation(
             stakeholder=stakeholder,
             proposal=proposal,
             round_number=round_number,
+            scenario=scenario,
         )
 
         decisions.append(decision)

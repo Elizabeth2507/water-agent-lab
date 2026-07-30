@@ -453,6 +453,20 @@ agreement
 summary
 ```
 
+
+## Memory-aware LLM prompts
+
+LLM stakeholder prompts can now include a compact memory summary.
+
+This allows future Qwen-based agents to condition their decisions on previous negotiation rounds.
+
+The memory summary can contain events such as:
+
+```text
+Round 1 | ecosystem | rejection | Ecosystem rejected because allocation was below minimum.
+Round 1 | agriculture | decision | Agriculture was concerned because allocation was below request.
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

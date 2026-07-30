@@ -18,6 +18,7 @@ class AgentRoundTranscript(BaseModel):
     decisions: list[AgentDecision]
     messages: list[AgentMessage] = Field(default_factory=list)
     result: SimulationResult
+    memory_summary: str | None = None
 
 
 class AgentNegotiationTranscript(BaseModel):

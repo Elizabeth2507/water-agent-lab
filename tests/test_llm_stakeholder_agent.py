@@ -10,6 +10,10 @@ from water_agent_lab.llm_stakeholder_agent import (
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
 from water_agent_lab.llm_backends import LLMGenerationResponse
+from water_agent_lab.agent_memory import AgentMemory
+from water_agent_lab.agent_models import AgentState
+from water_agent_lab.config import load_scenario_config
+from water_agent_lab.simulator import proportional_allocation
 
 
 # class InvalidBackend:
@@ -249,3 +253,54 @@ def test_decisions_to_rows() -> None:
     assert rows[0]["stakeholder_name"] == "agriculture"
     assert rows[0]["status"] == "concerned"
     assert "argument" in rows[0]
+
+
+def test_llm_stakeholder_agent_includes_memory_in_prompt() -> None:
+    backend = MockLLMBackend(
+        response_text="""
+        {
+          "stakeholder_name": "agriculture",
+          "status": "concerned",
+          "argument": "The proposal improved but remains difficult.",
+          "requested_extra_water": 2.0,
+          "willingness_to_compromise": 0.7
+        }
+        """
+    )
+
+    memory = AgentMemory()
+    memory.add(
+        round_number=1,
+        stakeholder_name="agriculture",
+        event_type="rejection",
+        content="Agriculture rejected the first proposal.",
+        importance=0.9,
+    )
+
+    profile = AgentProfile(
+        name="agriculture",
+        role="Agricultural water user",
+        goals=["Protect crop production"],
+        constraints=["Avoid allocation below irrigation minimum"],
+    )
+
+    agent = LLMStakeholderAgent(
+        profile=profile,
+        state=AgentState(),
+        backend=backend,
+        memory=memory,
+    )
+
+    scenario = load_scenario_config("configs/drought_mvp.yaml")
+    stakeholder = scenario.stakeholders[0]
+    proposal = proportional_allocation(scenario)
+
+    decision = agent.evaluate_allocation(
+        scenario=scenario,
+        stakeholder=stakeholder,
+        proposal=proposal,
+    )
+
+    assert decision.status == "concerned"
+    assert len(backend.requests) == 1
+    assert "Agriculture rejected the first proposal" in backend.requests[0].user_prompt

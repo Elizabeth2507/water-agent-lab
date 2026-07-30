@@ -1,7 +1,8 @@
 from typing import Any
 
+from water_agent_lab.agent_memory import AgentMemory
 from water_agent_lab.agent_models import AgentDecision, AgentProfile, AgentState
-from water_agent_lab.llm_backends import LLMBackend
+from water_agent_lab.llm_backends import LLMBackend, LLMGenerationRequest
 from water_agent_lab.llm_parsing import parse_agent_decision
 from water_agent_lab.llm_prompts import (
     build_stakeholder_system_prompt,
@@ -45,29 +46,31 @@ class LLMStakeholderAgent:
         profile: AgentProfile,
         backend: LLMBackend,
         state: AgentState | None = None,
+        memory: AgentMemory | None = None,
     ) -> None:
         self.profile = profile
         self.backend = backend
         self.state = state or AgentState()
+        self.memory = memory
 
     def evaluate_allocation(
         self,
         stakeholder: StakeholderConfig,
         proposal: AllocationProposal,
         round_number: int = 1,
+        scenario: ScenarioConfig | None = None,
     ) -> AgentDecision:
         """
         Evaluate an allocation proposal from this stakeholder's perspective.
         """
-        allocated_water = proposal.allocations.get(stakeholder.name, 0.0)
-
-        prompt = self._build_prompt(
+        request = self._build_request(
             stakeholder=stakeholder,
-            allocated_water=allocated_water,
+            proposal=proposal,
             round_number=round_number,
+            scenario=scenario,
         )
 
-        generation = self.backend.generate(prompt)
+        generation = self.backend.generate(request)
 
         decision = parse_agent_decision(
             generation.text,
@@ -75,33 +78,43 @@ class LLMStakeholderAgent:
         )
 
         self._update_state(decision)
+        self._record_decision_in_memory(
+            decision=decision,
+            round_number=round_number,
+        )
 
         return decision
 
-    def _build_prompt(
+    def _build_request(
         self,
         stakeholder: StakeholderConfig,
-        allocated_water: float,
+        proposal: AllocationProposal,
         round_number: int,
-    ) -> str:
+        scenario: ScenarioConfig | None = None,
+    ) -> LLMGenerationRequest:
         """
-        Build the prompt sent to the LLM backend.
+        Build the structured request sent to the LLM backend.
 
-        The system prompt uses the stakeholder profile. The user prompt contains
-        the concrete allocation situation.
+        The system prompt contains the stable agent role.
+        The user prompt contains the scenario, proposal, state, and memory context.
         """
         system_prompt = build_stakeholder_system_prompt(
             profile=self.profile,
         )
 
         user_prompt = build_stakeholder_user_prompt(
+            scenario=scenario,
             stakeholder=stakeholder,
+            proposal=proposal,
             state=self.state,
-            allocated_water=allocated_water,
             round_number=round_number,
+            memory=self.memory,
         )
 
-        return f"{system_prompt}\n\n{user_prompt}"
+        return LLMGenerationRequest(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
 
     def _update_state(self, decision: AgentDecision) -> None:
         """
@@ -135,6 +148,47 @@ class LLMStakeholderAgent:
                 self.state.trust_in_mediator + 0.1,
             )
 
+    def _record_decision_in_memory(
+        self,
+        decision: AgentDecision,
+        round_number: int,
+    ) -> None:
+        """
+        Record the decision in optional memory if the memory object supports it.
+        """
+        if self.memory is None:
+            return
+
+        payload = {
+            "round_number": round_number,
+            "stakeholder_name": decision.stakeholder_name,
+            "status": decision.status,
+            "argument": decision.argument,
+            "requested_extra_water": decision.requested_extra_water,
+            "willingness_to_compromise": decision.willingness_to_compromise,
+        }
+
+        for method_name in (
+            "add_decision",
+            "remember_decision",
+            "add_event",
+            "append",
+        ):
+            method = getattr(self.memory, method_name, None)
+
+            if not callable(method):
+                continue
+
+            try:
+                method(payload)
+                return
+            except TypeError:
+                try:
+                    method(decision)
+                    return
+                except TypeError:
+                    continue
+
 
 def evaluate_llm_stakeholder_responses(
     scenario: ScenarioConfig,
@@ -142,6 +196,7 @@ def evaluate_llm_stakeholder_responses(
     backend: LLMBackend,
     round_number: int = 1,
     profiles: dict[str, AgentProfile] | None = None,
+    memories: dict[str, AgentMemory] | None = None,
 ) -> list[AgentDecision]:
     """
     Evaluate all stakeholders in a scenario using LLMStakeholderAgent.
@@ -154,15 +209,23 @@ def evaluate_llm_stakeholder_responses(
             profiles=profiles,
         )
 
+        memory = _get_memory_for_stakeholder(
+            stakeholder=stakeholder,
+            memories=memories,
+        )
+
         agent = LLMStakeholderAgent(
             profile=profile,
             backend=backend,
+            state=AgentState(),
+            memory=memory,
         )
 
         decision = agent.evaluate_allocation(
             stakeholder=stakeholder,
             proposal=proposal,
             round_number=round_number,
+            scenario=scenario,
         )
 
         decisions.append(decision)
@@ -184,6 +247,19 @@ def _get_profile_for_stakeholder(
         stakeholder.name,
         build_default_agent_profile(stakeholder),
     )
+
+
+def _get_memory_for_stakeholder(
+    stakeholder: StakeholderConfig,
+    memories: dict[str, AgentMemory] | None,
+) -> AgentMemory | None:
+    """
+    Return stakeholder memory if available.
+    """
+    if memories is None:
+        return None
+
+    return memories.get(stakeholder.name)
 
 
 def decisions_to_rows(
