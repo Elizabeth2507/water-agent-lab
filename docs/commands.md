@@ -455,6 +455,11 @@ Then run:
 uv run water-agent-lab simulate --config configs/generated_combined_occitanie.yaml --strategy minimum-first
 ```
 
+Current combination rules:
+
+drought_level = most severe drought level from the two sources
+available_water = minimum available-water proxy from the two sources
+stakeholders = VigiEau-derived stakeholder profile
 
 ---
 
