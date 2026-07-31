@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from water_agent_lab.agent_models import AgentDecision, AgentMessage, AgentState
 from water_agent_lab.models import AllocationProposal, SimulationResult
 from water_agent_lab.mediator import MediatorRecommendation
-from water_agent_lab.counterproposals import CounterproposalSummary
 
 
 class AgentRoundTranscript(BaseModel):
@@ -23,7 +23,7 @@ class AgentRoundTranscript(BaseModel):
     memory_summary: str | None = None
     agent_states: dict[str, AgentState] = Field(default_factory=dict)
     mediator_recommendation: MediatorRecommendation | None = None
-    counterproposal_summary: CounterproposalSummary | None = None
+    counterproposal_summary: Any | None = None
     counterproposal_adjusted_proposal: AllocationProposal | None = None
     counterproposal_adjusted_result: SimulationResult | None = None
 

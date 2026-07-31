@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from water_agent_lab.agent_message_builder import decision_to_message
 from water_agent_lab.agent_transcript import (
     AgentNegotiationTranscript,
     AgentRoundTranscript,
@@ -16,6 +15,7 @@ from water_agent_lab.counterproposals import (
     build_counterproposal_adjusted_allocation,
     summarize_counterproposals,
 )
+from water_agent_lab.agent_message_builder import build_agent_messages_from_decisions
 
 
 def run_mock_llm_multi_round_negotiation(
@@ -41,8 +41,6 @@ def run_mock_llm_multi_round_negotiation(
         stakeholder_names=[stakeholder.name for stakeholder in scenario.stakeholders]
     )
 
-    mediator = RuleBasedMediatorAgent()
-
     for round_number in range(1, scenario.max_rounds + 1):
         strategy_function = get_strategy(current_strategy)
         proposal = strategy_function(scenario)
@@ -55,6 +53,16 @@ def run_mock_llm_multi_round_negotiation(
             round_number=round_number,
             memory=memory,
             agent_states=agent_states,
+        )
+
+        messages = build_agent_messages_from_decisions(
+            decisions=decisions,
+            round_number=round_number,
+        )
+
+        memory_summary = memory.summarize(
+            stakeholder_name=None,
+            limit=5,
         )
 
         counterproposal_summary = summarize_counterproposals(decisions)
@@ -72,7 +80,8 @@ def run_mock_llm_multi_round_negotiation(
             )
 
             counterproposal_adjusted_result = evaluate_proposal(
-                scenario, counterproposal_adjusted_proposal
+                scenario,
+                counterproposal_adjusted_proposal,
             )
 
         mediator_recommendation = mediator.recommend(
@@ -82,60 +91,25 @@ def run_mock_llm_multi_round_negotiation(
             counterproposal_summary=counterproposal_summary,
         )
 
-        messages = [
-            decision_to_message(
-                decision=decision,
+        rounds.append(
+            AgentRoundTranscript(
                 round_number=round_number,
+                strategy=current_strategy,
+                proposal=proposal,
+                decisions=decisions,
+                messages=messages,
+                result=result,
+                memory_summary=memory_summary,
+                agent_states={
+                    stakeholder_name: state.model_copy()
+                    for stakeholder_name, state in agent_states.items()
+                },
+                mediator_recommendation=mediator_recommendation,
+                counterproposal_summary=counterproposal_summary,
+                counterproposal_adjusted_proposal=counterproposal_adjusted_proposal,
+                counterproposal_adjusted_result=counterproposal_adjusted_result,
             )
-            for decision in decisions
-        ]
-
-        for decision in decisions:
-            memory.add(
-                round_number=round_number,
-                stakeholder_name=decision.stakeholder_name,
-                event_type="rejection" if decision.status == "rejected" else "decision",
-                content=decision.argument,
-                importance=0.9 if decision.status == "rejected" else 0.6,
-            )
-
-        for message in messages:
-            memory.add(
-                round_number=round_number,
-                stakeholder_name=message.sender,
-                event_type="message",
-                content=message.content,
-                importance=0.5,
-            )
-
-        rejected_decisions = [
-            decision for decision in decisions if decision.status == "rejected"
-        ]
-
-        round_memory_summary = memory.summarize(limit=5)
-
-        round_transcript = AgentRoundTranscript(
-            round_number=round_number,
-            strategy=current_strategy,
-            proposal=proposal,
-            decisions=decisions,
-            messages=messages,
-            result=result,
-            memory_summary=round_memory_summary,
-            agent_states={
-                stakeholder_name: state.model_copy()
-                for stakeholder_name, state in agent_states.items()
-            },
-            mediator_recommendation=mediator_recommendation,
-            counterproposal_summary=counterproposal_summary,
-            counterproposal_adjusted_proposal=counterproposal_adjusted_proposal,
-            counterproposal_adjusted_result=counterproposal_adjusted_result,
         )
-        rounds.append(round_transcript)
-
-        if not rejected_decisions:
-            agreement_reached = True
-            break
 
         if mediator_recommendation.action == "accept_proposal":
             agreement_reached = True

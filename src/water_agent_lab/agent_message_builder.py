@@ -25,3 +25,21 @@ def decision_to_message(
             else None
         ),
     )
+
+
+def build_agent_messages_from_decisions(
+    decisions: list[AgentDecision],
+    round_number: int,
+    recipient: str = "mediator",
+) -> list[AgentMessage]:
+    """
+    Convert all stakeholder decisions from one round into AgentMessage objects.
+    """
+    return [
+        decision_to_message(
+            decision=decision,
+            round_number=round_number,
+            recipient=recipient,
+        )
+        for decision in decisions
+    ]

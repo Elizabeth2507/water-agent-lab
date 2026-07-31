@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 from water_agent_lab.agent_models import AgentDecision
 from water_agent_lab.models import SimulationResult
 from water_agent_lab.negotiation import choose_revision_strategy
-from water_agent_lab.counterproposals import CounterproposalSummary
 
 
 MediatorAction = Literal[
@@ -43,15 +42,8 @@ class RuleBasedMediatorAgent:
         current_strategy: str,
         decisions: list[AgentDecision],
         result: SimulationResult,
-        counterproposal_summary: CounterproposalSummary | None = None,
+        counterproposal_summary: object | None = None,
     ) -> MediatorRecommendation:
-
-        total_requested_extra_water = (
-            counterproposal_summary.total_requested_extra_water
-            if counterproposal_summary is not None
-            else sum(decision.requested_extra_water for decision in decisions)
-        )
-
         rejected_stakeholders = [
             decision.stakeholder_name
             for decision in decisions
@@ -64,6 +56,15 @@ class RuleBasedMediatorAgent:
             if decision.status == "concerned"
         ]
 
+        total_requested_extra_water = _get_total_requested_extra_water(
+            decisions=decisions,
+            counterproposal_summary=counterproposal_summary,
+        )
+
+        pressure_sentence = _build_counterproposal_pressure_sentence(
+            total_requested_extra_water=total_requested_extra_water,
+        )
+
         if not rejected_stakeholders:
             return MediatorRecommendation(
                 action="accept_proposal",
@@ -71,9 +72,11 @@ class RuleBasedMediatorAgent:
                 recommended_strategy=current_strategy,
                 rejected_stakeholders=[],
                 concerned_stakeholders=concerned_stakeholders,
+                total_requested_extra_water=total_requested_extra_water,
                 summary=(
                     "No stakeholder rejected the proposal. "
                     "The mediator recommends accepting the current allocation."
+                    f"{pressure_sentence}"
                 ),
             )
 
@@ -86,9 +89,11 @@ class RuleBasedMediatorAgent:
                 recommended_strategy=current_strategy,
                 rejected_stakeholders=rejected_stakeholders,
                 concerned_stakeholders=concerned_stakeholders,
+                total_requested_extra_water=total_requested_extra_water,
                 summary=(
                     "Some stakeholders rejected the proposal, but the current "
                     "strategy has no deterministic revision available."
+                    f"{pressure_sentence}"
                 ),
             )
 
@@ -98,11 +103,44 @@ class RuleBasedMediatorAgent:
             recommended_strategy=recommended_strategy,
             rejected_stakeholders=rejected_stakeholders,
             concerned_stakeholders=concerned_stakeholders,
+            total_requested_extra_water=total_requested_extra_water,
             summary=(
                 "Some stakeholders rejected the proposal. "
                 f"The mediator recommends switching from {current_strategy} "
-                f"to {recommended_strategy}. "
-                f"Stakeholders requested {total_requested_extra_water:.2f} extra water units."
+                f"to {recommended_strategy}."
+                f"{pressure_sentence}"
             ),
-            total_requested_extra_water=total_requested_extra_water,
         )
+
+
+def _get_total_requested_extra_water(
+    decisions: list[AgentDecision],
+    counterproposal_summary: object | None,
+) -> float:
+    """
+    Get total requested extra water from a counterproposal summary if available,
+    otherwise compute it directly from decisions.
+    """
+    if counterproposal_summary is not None:
+        value = getattr(
+            counterproposal_summary,
+            "total_requested_extra_water",
+            None,
+        )
+
+        if isinstance(value, int | float):
+            return float(value)
+
+    return sum(decision.requested_extra_water for decision in decisions)
+
+
+def _build_counterproposal_pressure_sentence(
+    total_requested_extra_water: float,
+) -> str:
+    """
+    Build a short sentence describing total counterproposal pressure.
+    """
+    if total_requested_extra_water <= 0:
+        return ""
+
+    return f" Stakeholders requested {total_requested_extra_water:.2f} extra water."

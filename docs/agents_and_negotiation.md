@@ -533,13 +533,14 @@ The process is:
 ```
 
 The adjustment rule is deterministic:
-
+```
 requesting stakeholders receive additional water if possible
 non-requesting stakeholders may donate transferable water
 no donor should be reduced below minimum acceptable water
 the total allocation must remain within the available water budget
 
 At this stage, the counterproposal-adjusted allocation is stored as a candidate. It does not yet replace the next round's strategy proposal. This keeps experiments easy to inspect and avoids hidden changes in negotiation behavior.
+```
 
 ## Future LLM-agent extension
 
