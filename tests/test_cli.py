@@ -1782,3 +1782,89 @@ def test_monte_carlo_mock_command_rejects_invalid_runs(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
+
+
+def test_monte_carlo_report_command(tmp_path) -> None:
+    monte_carlo_output = tmp_path / "monte_carlo_mock.csv"
+    report_output = tmp_path / "monte_carlo_report.md"
+    conflict_plot = tmp_path / "conflict.png"
+    rounds_plot = tmp_path / "rounds.png"
+
+    monte_carlo_result = runner.invoke(
+        app,
+        [
+            "monte-carlo-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "3",
+            "--seed",
+            "42",
+            "--output",
+            str(monte_carlo_output),
+            "--work-dir",
+            str(tmp_path / "variants"),
+        ],
+    )
+
+    assert monte_carlo_result.exit_code == 0
+    assert monte_carlo_output.exists()
+
+    report_result = runner.invoke(
+        app,
+        [
+            "monte-carlo-report",
+            "--input",
+            str(monte_carlo_output),
+            "--output",
+            str(report_output),
+            "--conflict-plot",
+            str(conflict_plot),
+            "--rounds-plot",
+            str(rounds_plot),
+        ],
+    )
+
+    assert report_result.exit_code == 0
+    assert report_output.exists()
+    assert conflict_plot.exists()
+    assert rounds_plot.exists()
+    assert "Monte Carlo Report" in report_result.stdout
+    assert "Saved Monte Carlo report" in report_result.stdout
+
+
+def test_monte_carlo_report_command_rejects_non_markdown_output(tmp_path) -> None:
+    monte_carlo_output = tmp_path / "monte_carlo_mock.csv"
+    report_output = tmp_path / "monte_carlo_report.txt"
+
+    monte_carlo_result = runner.invoke(
+        app,
+        [
+            "monte-carlo-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "2",
+            "--output",
+            str(monte_carlo_output),
+            "--work-dir",
+            str(tmp_path / "variants"),
+        ],
+    )
+
+    assert monte_carlo_result.exit_code == 0
+
+    report_result = runner.invoke(
+        app,
+        [
+            "monte-carlo-report",
+            "--input",
+            str(monte_carlo_output),
+            "--output",
+            str(report_output),
+        ],
+    )
+
+    assert report_result.exit_code != 0

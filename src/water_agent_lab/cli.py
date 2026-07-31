@@ -74,6 +74,11 @@ from water_agent_lab.agent_memory import save_agent_memory_json
 from water_agent_lab.agent_memory_builder import build_memory_from_transcript
 from water_agent_lab.agent_transcript import load_agent_transcript_json
 from water_agent_lab.monte_carlo import run_mock_llm_monte_carlo
+from water_agent_lab.monte_carlo_plotter import (
+    plot_final_conflict_distribution,
+    plot_rounds_used_distribution,
+)
+from water_agent_lab.monte_carlo_reporting import generate_monte_carlo_report
 
 
 app = typer.Typer(
@@ -2303,6 +2308,79 @@ def monte_carlo_mock(
 
     console.print(table)
     console.print(f"[green]Saved Monte Carlo results to {output}[/green]")
+
+
+@app.command("monte-carlo-report")
+def monte_carlo_report(
+    input: Annotated[
+        Path,
+        typer.Option(
+            "--input",
+            "-i",
+            help="Path to Monte Carlo results CSV.",
+        ),
+    ] = Path("outputs/monte_carlo_mock.csv"),
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save Monte Carlo Markdown report.",
+        ),
+    ] = Path("docs/monte_carlo_report.md"),
+    conflict_plot: Annotated[
+        Path | None,
+        typer.Option(
+            "--conflict-plot",
+            help="Optional path to save final conflict histogram.",
+        ),
+    ] = Path("outputs/monte_carlo_conflict_histogram.png"),
+    rounds_plot: Annotated[
+        Path | None,
+        typer.Option(
+            "--rounds-plot",
+            help="Optional path to save rounds-used histogram.",
+        ),
+    ] = Path("outputs/monte_carlo_rounds_histogram.png"),
+) -> None:
+    """
+    Generate a Markdown report and plots from Monte Carlo mock LLM results.
+    """
+    if output.suffix != ".md":
+        raise typer.BadParameter("Output report file must end with .md.")
+
+    generate_monte_carlo_report(
+        input_path=input,
+        output_path=output,
+    )
+
+    if conflict_plot is not None:
+        plot_final_conflict_distribution(
+            input_path=input,
+            output_path=conflict_plot,
+        )
+
+    if rounds_plot is not None:
+        plot_rounds_used_distribution(
+            input_path=input,
+            output_path=rounds_plot,
+        )
+
+    table = Table(title="Monte Carlo Report")
+
+    table.add_column("Artifact")
+    table.add_column("Path")
+
+    table.add_row("Report", str(output))
+
+    if conflict_plot is not None:
+        table.add_row("Conflict plot", str(conflict_plot))
+
+    if rounds_plot is not None:
+        table.add_row("Rounds plot", str(rounds_plot))
+
+    console.print(table)
+    console.print(f"[green]Saved Monte Carlo report to {output}[/green]")
 
 
 @app.command("version")

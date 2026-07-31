@@ -59,6 +59,7 @@ WaterAgentLab currently supports:
 - Mock LLM multi-round negotiation with transcript export
 - Structured agent memory extracted from AI-agent transcripts
 - Monte Carlo runner for mock LLM negotiations
+- Monte Carlo reports and plots for mock LLM negotiations
 
 ---
 
@@ -548,6 +549,15 @@ uv run water-agent-lab monte-carlo-mock \
   --seed 42 \
   --output outputs/monte_carlo_mock.csv
   ```
+
+
+Generate a Monte Carlo report:
+
+```bash
+uv run water-agent-lab monte-carlo-report \
+  --input outputs/monte_carlo_mock.csv \
+  --output docs/monte_carlo_report.md
+```
 
 
 ## Design notes

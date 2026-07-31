@@ -558,6 +558,44 @@ uv run water-agent-lab summarize-agent-memory \
   --output outputs/agent_memory.json
 ```
 
+### `monte-carlo-mock`
+
+Run repeated mock LLM negotiations over scenario variations.
+
+```bash
+uv run water-agent-lab monte-carlo-mock \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --runs 20 \
+  --seed 42 \
+  --output outputs/monte_carlo_mock.csv
+```
+
+The command varies available water, runs mock LLM negotiations, and saves one row per run.
+
+Useful output fields include:
+
+```text
+agreement_reached
+rounds_used
+final_conflict_score
+final_fairness_score
+final_minimum_satisfaction_score
+final_mediator_action
+```
+
+
+### `monte-carlo-report`
+
+Generate a Markdown report and plots from Monte Carlo mock LLM results.
+
+```bash
+uv run water-agent-lab monte-carlo-report \
+  --input outputs/monte_carlo_mock.csv \
+  --output docs/monte_carlo_report.md \
+  --conflict-plot outputs/monte_carlo_conflict_histogram.png \
+  --rounds-plot outputs/monte_carlo_rounds_histogram.png
+```
 
 ---
 

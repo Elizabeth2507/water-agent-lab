@@ -582,6 +582,16 @@ The Monte Carlo runner currently varies:
 available_water
 ```
 
+## Monte Carlo reports
+
+Monte Carlo results can be summarized with:
+
+```bash
+uv run water-agent-lab monte-carlo-report \
+  --input outputs/monte_carlo_mock.csv \
+  --output docs/monte_carlo_report.md
+```
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
