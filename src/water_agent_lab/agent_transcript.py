@@ -24,6 +24,8 @@ class AgentRoundTranscript(BaseModel):
     agent_states: dict[str, AgentState] = Field(default_factory=dict)
     mediator_recommendation: MediatorRecommendation | None = None
     counterproposal_summary: CounterproposalSummary | None = None
+    counterproposal_adjusted_proposal: AllocationProposal | None = None
+    counterproposal_adjusted_result: SimulationResult | None = None
 
 
 class AgentNegotiationTranscript(BaseModel):

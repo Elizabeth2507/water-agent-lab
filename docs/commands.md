@@ -528,6 +528,8 @@ The command reports stakeholder rejection, average agent state, and mediator act
 
 The command also reports the total extra water requested by stakeholder counterproposals.
 
+The command also reports the conflict score of the counterproposal-adjusted candidate when one is available.
+
 ### `summarize-agent-memory`
 
 Build and summarize agent memory from a saved AI-agent transcript.

@@ -1650,3 +1650,19 @@ def test_llm_negotiate_mock_command_shows_counterproposal_pressure() -> None:
 
     assert result.exit_code == 0
     assert "Requested extra" in result.stdout
+
+
+def test_llm_negotiate_mock_command_shows_counterproposal_candidate() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Counterproposal conflict" in result.stdout

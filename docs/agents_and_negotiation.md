@@ -517,6 +517,30 @@ Example:
 }
 
 
+## Counterproposal-adjusted allocation candidates
+
+WaterAgentLab can now build a counterproposal-adjusted allocation candidate.
+
+The process is:
+
+```text
+1. Stakeholder agents evaluate the current proposal.
+2. Agents may request extra water through requested_extra_water.
+3. CounterproposalSummary aggregates these requests.
+4. A candidate revised allocation is built.
+5. The candidate is evaluated with the same metrics as normal proposals.
+6. The candidate result is stored in the transcript.
+```
+
+The adjustment rule is deterministic:
+
+requesting stakeholders receive additional water if possible
+non-requesting stakeholders may donate transferable water
+no donor should be reduced below minimum acceptable water
+the total allocation must remain within the available water budget
+
+At this stage, the counterproposal-adjusted allocation is stored as a candidate. It does not yet replace the next round's strategy proposal. This keeps experiments easy to inspect and avoids hidden changes in negotiation behavior.
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

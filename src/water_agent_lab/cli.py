@@ -2025,6 +2025,7 @@ def llm_negotiate_mock(
     table.add_column("Messages")
     table.add_column("Avg frustration")
     table.add_column("Avg trust")
+    table.add_column("Counterproposal conflict")
 
     total_requested_extra = 0.0
 
@@ -2049,6 +2050,12 @@ def llm_negotiate_mock(
             if decision.status == "rejected"
         ]
 
+        counterproposal_conflict = (
+            round_transcript.counterproposal_adjusted_result.conflict_score
+            if round_transcript.counterproposal_adjusted_result is not None
+            else None
+        )
+
         requested_extra = sum(
             decision.requested_extra_water for decision in round_transcript.decisions
         )
@@ -2065,12 +2072,31 @@ def llm_negotiate_mock(
             str(len(round_transcript.messages)),
             f"{average_frustration:.2f}",
             f"{average_trust:.2f}",
+            (
+                f"{counterproposal_conflict:.3f}"
+                if counterproposal_conflict is not None
+                else "n/a"
+            ),
         )
 
     console.print(table)
 
     # Plain text line for tests and readable CLI output.
     console.print(f"Requested extra water: {total_requested_extra:.2f}")
+
+    for round_transcript in transcript.rounds:
+        counterproposal_result = getattr(
+            round_transcript,
+            "counterproposal_adjusted_result",
+            None,
+        )
+
+        if counterproposal_result is not None:
+            console.print(
+                "Counterproposal conflict "
+                f"round {round_transcript.round_number}: "
+                f"{counterproposal_result.conflict_score:.3f}"
+            )
 
     console.print(f"Scenario: {transcript.scenario_name}")
     console.print(f"Backend: {transcript.backend_name}")

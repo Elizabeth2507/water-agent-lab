@@ -12,7 +12,10 @@ from water_agent_lab.strategies import get_strategy
 from water_agent_lab.agent_memory import AgentMemory
 from water_agent_lab.agent_state_manager import initialize_agent_states
 from water_agent_lab.mediator import RuleBasedMediatorAgent
-from water_agent_lab.counterproposals import summarize_counterproposals
+from water_agent_lab.counterproposals import (
+    build_counterproposal_adjusted_allocation,
+    summarize_counterproposals,
+)
 
 
 def run_mock_llm_multi_round_negotiation(
@@ -55,6 +58,22 @@ def run_mock_llm_multi_round_negotiation(
         )
 
         counterproposal_summary = summarize_counterproposals(decisions)
+
+        counterproposal_adjusted_proposal = None
+        counterproposal_adjusted_result = None
+
+        if counterproposal_summary.total_requested_extra_water > 0:
+            counterproposal_adjusted_proposal = (
+                build_counterproposal_adjusted_allocation(
+                    scenario=scenario,
+                    proposal=proposal,
+                    counterproposal_summary=counterproposal_summary,
+                )
+            )
+
+            counterproposal_adjusted_result = evaluate_proposal(
+                scenario, counterproposal_adjusted_proposal
+            )
 
         mediator_recommendation = mediator.recommend(
             current_strategy=current_strategy,
@@ -109,6 +128,8 @@ def run_mock_llm_multi_round_negotiation(
             },
             mediator_recommendation=mediator_recommendation,
             counterproposal_summary=counterproposal_summary,
+            counterproposal_adjusted_proposal=counterproposal_adjusted_proposal,
+            counterproposal_adjusted_result=counterproposal_adjusted_result,
         )
         rounds.append(round_transcript)
 
