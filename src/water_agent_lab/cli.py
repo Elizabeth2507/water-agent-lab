@@ -85,6 +85,7 @@ from water_agent_lab.negotiation_mode_comparison import (
 from water_agent_lab.negotiation_mode_reporting import (
     generate_negotiation_mode_comparison_report,
 )
+from water_agent_lab.ai_agent_experiment import run_ai_agent_experiment
 
 
 app = typer.Typer(
@@ -2572,6 +2573,64 @@ def compare_negotiation_modes_report(
     console.print(f"Conflict plot: {conflict_plot_path}")
     console.print(f"Agreement plot: {agreement_plot_path}")
     console.print(f"Rounds plot: {rounds_plot_path}")
+
+
+@app.command("run-ai-agent-experiment")
+def run_ai_agent_experiment_command(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Initial allocation strategy.",
+        ),
+    ] = "proportional",
+    runs: Annotated[
+        int,
+        typer.Option(
+            "--runs",
+            help="Number of Monte Carlo mock LLM negotiation runs.",
+        ),
+    ] = 30,
+    seed: Annotated[
+        int,
+        typer.Option(
+            "--seed",
+            help="Random seed for deterministic scenario variation.",
+        ),
+    ] = 42,
+    output_dir: Annotated[
+        Path,
+        typer.Option(
+            "--output-dir",
+            help="Directory where experiment artifacts will be written.",
+        ),
+    ] = Path("outputs/ai_agent_experiment"),
+) -> None:
+    """
+    Run the full AI-agent experiment workflow.
+    """
+    try:
+        run_ai_agent_experiment(
+            config_path=config,
+            initial_strategy=strategy,
+            runs=runs,
+            seed=seed,
+            output_dir=output_dir,
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    console.print("[green]AI-agent experiment completed[/green]")
+    console.print(f"Output directory: {output_dir}")
+    console.print(f"Summary: {output_dir / 'ai_agent_experiment_summary.md'}")
 
 
 @app.command("version")

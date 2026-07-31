@@ -635,6 +635,23 @@ uv run water-agent-lab compare-negotiation-modes-report \
 ```
 
 
+## run-ai-agent-experiment
+
+Run the full AI-agent experiment workflow.
+
+The command runs Monte Carlo mock LLM negotiations, generates Monte Carlo plots and a report, compares rule-based negotiation with mock LLM-style negotiation, generates comparison plots and a report, and writes a final experiment summary.
+
+Example:
+
+```bash
+uv run water-agent-lab run-ai-agent-experiment \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --runs 30 \
+  --seed 42 \
+  --output-dir outputs/ai_agent_experiment
+```
+
 ---
 
 ## Recommended workflows

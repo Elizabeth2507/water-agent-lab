@@ -2054,3 +2054,98 @@ def test_compare_negotiation_modes_report_command_rejects_non_md_output(
 
     assert result.exit_code != 0
     assert "Output report file must be a .md file" in result.output
+
+
+def test_run_ai_agent_experiment_command_rejects_invalid_runs(tmp_path) -> None:
+    output_dir = tmp_path / "ai_agent_experiment"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-ai-agent-experiment",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "0",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_run_ai_agent_experiment_command_rejects_invalid_variation_fraction(
+    tmp_path,
+) -> None:
+    output_dir = tmp_path / "ai_agent_experiment"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-ai-agent-experiment",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "3",
+            "--variation-fraction",
+            "-0.1",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_run_ai_agent_experiment_command(tmp_path) -> None:
+    output_dir = tmp_path / "ai_agent_experiment"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-ai-agent-experiment",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "3",
+            "--seed",
+            "42",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "AI-agent experiment completed" in result.stdout
+    assert (output_dir / "ai_agent_experiment_summary.md").exists()
+    assert (output_dir / "monte_carlo_mock.csv").exists()
+    assert (output_dir / "negotiation_mode_comparison.csv").exists()
+
+
+def test_run_ai_agent_experiment_command_rejects_non_positive_runs(
+    tmp_path,
+) -> None:
+    output_dir = tmp_path / "ai_agent_experiment"
+
+    result = runner.invoke(
+        app,
+        [
+            "run-ai-agent-experiment",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "0",
+            "--seed",
+            "42",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "runs must be greater than 0" in result.output

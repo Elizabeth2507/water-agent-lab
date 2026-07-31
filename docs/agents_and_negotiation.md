@@ -626,6 +626,21 @@ uv run water-agent-lab compare-negotiation-modes-report \
 ```
 
 
+## Full AI-agent experiment workflow
+
+The project includes a full AI-agent experiment command that runs the main analysis workflow end to end.
+
+The workflow:
+
+1. runs repeated mock LLM-style negotiations over deterministic scenario variations,
+2. generates a Monte Carlo report and plots,
+3. compares rule-based negotiation with mock LLM-style negotiation,
+4. generates a comparison report and plots,
+5. writes a final experiment summary.
+
+This command is intended for portfolio demonstrations because it produces all key experiment artifacts from one reproducible command.
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
