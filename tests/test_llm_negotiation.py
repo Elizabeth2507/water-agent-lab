@@ -138,4 +138,6 @@ def test_mock_llm_multi_round_negotiation_uses_mediator_revision() -> None:
 
     if first_recommendation.action == "revise_strategy":
         assert transcript.rounds_used > 1
-        assert transcript.rounds[1].strategy == first_recommendation.recommended_strategy
+        assert (
+            transcript.rounds[1].strategy == first_recommendation.recommended_strategy
+        )

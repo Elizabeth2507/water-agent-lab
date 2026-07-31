@@ -31,6 +31,7 @@ def run_mock_llm_multi_round_negotiation(
     agreement_reached = False
 
     memory = AgentMemory()
+    mediator = RuleBasedMediatorAgent()
 
     agent_states = initialize_agent_states(
         stakeholder_names=[stakeholder.name for stakeholder in scenario.stakeholders]
@@ -88,7 +89,7 @@ def run_mock_llm_multi_round_negotiation(
             decision for decision in decisions if decision.status == "rejected"
         ]
 
-        round_memory_summary = memory.summarize(limit=10)
+        round_memory_summary = memory.summarize(limit=5)
 
         round_transcript = AgentRoundTranscript(
             round_number=round_number,
@@ -109,7 +110,6 @@ def run_mock_llm_multi_round_negotiation(
         if not rejected_decisions:
             agreement_reached = True
             break
-
 
         if mediator_recommendation.action == "accept_proposal":
             agreement_reached = True

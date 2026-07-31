@@ -486,6 +486,20 @@ This is useful because future Qwen-based agents should not only remember previou
 The current state update rules are deterministic and simple. They are not meant to be a psychological model. They are an engineering foundation for future experiments.
 
 
+## Mediator agent
+
+WaterAgentLab includes a deterministic mediator agent.
+
+The mediator reads:
+
+```text
+stakeholder decisions
+rejected stakeholders
+concerned stakeholders
+simulation metrics
+current strategy
+```
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
