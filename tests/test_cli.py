@@ -1682,3 +1682,103 @@ def test_llm_negotiate_mock_command_shows_mediator_action() -> None:
 
     assert result.exit_code == 0
     assert "Mediator action" in result.stdout
+
+
+def test_monte_carlo_mock_command_csv(tmp_path) -> None:
+    output_path = tmp_path / "monte_carlo_mock.csv"
+    work_dir = tmp_path / "variants"
+
+    result = runner.invoke(
+        app,
+        [
+            "monte-carlo-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "3",
+            "--seed",
+            "42",
+            "--output",
+            str(output_path),
+            "--work-dir",
+            str(work_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Monte Carlo Mock LLM Negotiations" in result.stdout
+    assert "Saved Monte Carlo results" in result.stdout
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "run_index" in content
+    assert "final_conflict_score" in content
+
+
+def test_monte_carlo_mock_command_json(tmp_path) -> None:
+    output_path = tmp_path / "monte_carlo_mock.json"
+    work_dir = tmp_path / "variants"
+
+    result = runner.invoke(
+        app,
+        [
+            "monte-carlo-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "2",
+            "--seed",
+            "42",
+            "--output",
+            str(output_path),
+            "--work-dir",
+            str(work_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved Monte Carlo results" in result.stdout
+
+
+def test_monte_carlo_mock_command_rejects_invalid_output_suffix(tmp_path) -> None:
+    output_path = tmp_path / "monte_carlo_mock.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "monte-carlo-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "2",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_monte_carlo_mock_command_rejects_invalid_runs(tmp_path) -> None:
+    output_path = tmp_path / "monte_carlo_mock.csv"
+
+    result = runner.invoke(
+        app,
+        [
+            "monte-carlo-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "0",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0

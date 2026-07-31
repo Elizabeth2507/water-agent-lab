@@ -58,6 +58,7 @@ WaterAgentLab currently supports:
 - Mock LLM stakeholder-agent workflow
 - Mock LLM multi-round negotiation with transcript export
 - Structured agent memory extracted from AI-agent transcripts
+- Monte Carlo runner for mock LLM negotiations
 
 ---
 
@@ -535,6 +536,18 @@ uv run water-agent-lab llm-negotiate-mock \
 ```bash
 uv run water-agent-lab summarize-agent-memory --transcript outputs/mock_llm_negotiation.json --stakeholder ecosystem
 ```
+
+
+Run repeated mock LLM negotiations:
+
+```bash
+uv run water-agent-lab monte-carlo-mock \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --runs 20 \
+  --seed 42 \
+  --output outputs/monte_carlo_mock.csv
+  ```
 
 
 ## Design notes

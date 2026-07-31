@@ -73,6 +73,7 @@ from water_agent_lab.llm_negotiation import run_mock_llm_multi_round_negotiation
 from water_agent_lab.agent_memory import save_agent_memory_json
 from water_agent_lab.agent_memory_builder import build_memory_from_transcript
 from water_agent_lab.agent_transcript import load_agent_transcript_json
+from water_agent_lab.monte_carlo import run_mock_llm_monte_carlo
 
 
 app = typer.Typer(
@@ -2203,6 +2204,105 @@ def summarize_agent_memory(
             output_path=output,
         )
         console.print(f"[green]Saved agent memory to {output}[/green]")
+
+
+@app.command("monte-carlo-mock")
+def monte_carlo_mock(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the base drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Initial allocation strategy.",
+        ),
+    ] = "proportional",
+    runs: Annotated[
+        int,
+        typer.Option(
+            "--runs",
+            help="Number of Monte Carlo runs.",
+        ),
+    ] = 20,
+    seed: Annotated[
+        int,
+        typer.Option(
+            "--seed",
+            help="Random seed for reproducible scenario variations.",
+        ),
+    ] = 42,
+    variation_fraction: Annotated[
+        float,
+        typer.Option(
+            "--variation-fraction",
+            help="Available-water variation fraction, for example 0.15 for ±15%.",
+        ),
+    ] = 0.15,
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save Monte Carlo results as CSV or JSON.",
+        ),
+    ] = Path("outputs/monte_carlo_mock.csv"),
+    work_dir: Annotated[
+        Path,
+        typer.Option(
+            "--work-dir",
+            help="Directory for generated temporary scenario variants.",
+        ),
+    ] = Path("outputs/monte_carlo_variants"),
+) -> None:
+    """
+    Run Monte Carlo mock LLM negotiations over scenario variations.
+    """
+    if output.suffix not in {".csv", ".json"}:
+        raise typer.BadParameter("Output file must end with .csv or .json.")
+
+    try:
+        rows = run_mock_llm_monte_carlo(
+            config_path=config,
+            initial_strategy=strategy,
+            runs=runs,
+            seed=seed,
+            work_dir=work_dir,
+            variation_fraction=variation_fraction,
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    if output.suffix == ".csv":
+        save_results_csv(rows, output)
+    else:
+        save_results_json(rows, output)
+
+    agreement_count = sum(1 for row in rows if row["agreement_reached"])
+    average_conflict = sum(row["final_conflict_score"] for row in rows) / len(rows)
+    average_rounds = sum(row["rounds_used"] for row in rows) / len(rows)
+
+    table = Table(title="Monte Carlo Mock LLM Negotiations")
+
+    table.add_column("Metric")
+    table.add_column("Value")
+
+    table.add_row("Runs", str(len(rows)))
+    table.add_row("Agreement count", str(agreement_count))
+    table.add_row("Agreement rate", f"{agreement_count / len(rows):.2f}")
+    table.add_row("Average final conflict", f"{average_conflict:.3f}")
+    table.add_row("Average rounds used", f"{average_rounds:.2f}")
+    table.add_row("Seed", str(seed))
+    table.add_row("Variation fraction", f"{variation_fraction:.2f}")
+    table.add_row("Output", str(output))
+
+    console.print(table)
+    console.print(f"[green]Saved Monte Carlo results to {output}[/green]")
 
 
 @app.command("version")

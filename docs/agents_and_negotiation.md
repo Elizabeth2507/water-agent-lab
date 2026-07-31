@@ -570,6 +570,18 @@ use_counterproposal_candidate
 stop_no_improvement
 ```
 
+## Monte Carlo mock LLM negotiations
+
+WaterAgentLab can run repeated mock LLM negotiations over small scenario variations.
+
+This is useful because agent simulations should be analyzed as distributions, not only as one trace.
+
+The Monte Carlo runner currently varies:
+
+```text
+available_water
+```
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
