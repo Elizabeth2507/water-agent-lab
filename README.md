@@ -611,6 +611,8 @@ uv run water-agent-lab qwen-smoke-test \
   --model Qwen/Qwen2.5-1.5B-Instruct
 ```
 
+The project includes robust JSON extraction for real LLM outputs, so the Qwen smoke test can handle raw JSON, fenced JSON, or JSON surrounded by short explanatory text. The extracted object is still validated against the expected Pydantic schema.
+
 ## Design notes
 
 The main branch is kept deterministic because reproducibility matters for this kind of simulation. Before adding LLM agents, it is useful to have a baseline where every run can be tested and compared exactly.

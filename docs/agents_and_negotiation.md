@@ -676,6 +676,21 @@ uv run water-agent-lab qwen-smoke-test \
 ```
 
 
+## Robust LLM JSON parsing
+
+Real LLMs may not always return pure JSON, even when prompted to do so.
+
+For example, a model may return JSON inside a Markdown code fence or include a short sentence before the JSON object.
+
+WaterAgentLab supports robust JSON extraction for LLM outputs. The parser can handle raw JSON, JSON inside Markdown fences, extra text before or after JSON, and simple trailing commas.
+
+The parser still validates the extracted object against the expected Pydantic schema, such as `AgentDecision`.
+
+The stakeholder name is enforced from the simulation state instead of being trusted from the model output. This prevents a model from accidentally returning a decision for the wrong stakeholder.
+
+Strict parsing remains available by setting `allow_json_extraction=False`.
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

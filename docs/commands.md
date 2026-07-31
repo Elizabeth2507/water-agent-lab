@@ -672,6 +672,8 @@ uv sync --extra local-llm
 
 This command is intended for local use only. It is not required for CI.
 
+The Qwen smoke test uses robust JSON extraction by default, so it can parse common model outputs that include Markdown fences or short explanations around the JSON object.
+
 ---
 
 ## Recommended workflows

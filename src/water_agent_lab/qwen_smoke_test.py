@@ -43,10 +43,10 @@ Scenario:
 Return JSON with this exact schema:
 {
   "stakeholder_name": "urban",
-  "status": "accepted | concerned | rejected",
-  "argument": "short explanation",
-  "requested_extra_water": 0.0,
-  "willingness_to_compromise": 0.0
+  "status": "concerned",
+  "argument": "Urban water users receive more than the minimum acceptable amount, but less than requested.",
+  "requested_extra_water": 5.0,
+  "willingness_to_compromise": 0.6
 }
 
 Decision rules:
