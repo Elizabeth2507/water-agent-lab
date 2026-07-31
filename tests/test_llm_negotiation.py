@@ -201,3 +201,15 @@ def test_counterproposal_adjusted_candidate_preserves_water_budget() -> None:
                 <= adjusted_result.available_water + 1e-9
             )
             assert adjusted_result.water_budget_valid is True
+
+
+def test_mock_llm_negotiation_records_normal_revised_candidate() -> None:
+    transcript = run_mock_llm_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    first_round = transcript.rounds[0]
+
+    assert first_round.normal_revised_strategy is not None
+    assert first_round.normal_revised_result is not None

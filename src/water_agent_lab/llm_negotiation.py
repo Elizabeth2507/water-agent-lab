@@ -1,21 +1,22 @@
 from pathlib import Path
 
+from water_agent_lab.agent_memory import AgentMemory
+from water_agent_lab.agent_message_builder import build_agent_messages_from_decisions
+from water_agent_lab.agent_state_manager import initialize_agent_states
 from water_agent_lab.agent_transcript import (
     AgentNegotiationTranscript,
     AgentRoundTranscript,
 )
 from water_agent_lab.config import load_scenario_config
-from water_agent_lab.evaluator import evaluate_proposal
-from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
-from water_agent_lab.strategies import get_strategy
-from water_agent_lab.agent_memory import AgentMemory
-from water_agent_lab.agent_state_manager import initialize_agent_states
-from water_agent_lab.mediator import RuleBasedMediatorAgent
 from water_agent_lab.counterproposals import (
     build_counterproposal_adjusted_allocation,
     summarize_counterproposals,
 )
-from water_agent_lab.agent_message_builder import build_agent_messages_from_decisions
+from water_agent_lab.evaluator import evaluate_proposal
+from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
+from water_agent_lab.mediator import RuleBasedMediatorAgent
+from water_agent_lab.negotiation import choose_revision_strategy
+from water_agent_lab.strategies import get_strategy
 
 
 def run_mock_llm_multi_round_negotiation(
@@ -84,11 +85,26 @@ def run_mock_llm_multi_round_negotiation(
                 counterproposal_adjusted_proposal,
             )
 
+        normal_revised_strategy = choose_revision_strategy(current_strategy)
+        normal_revised_proposal = None
+        normal_revised_result = None
+
+        if normal_revised_strategy != current_strategy:
+            normal_revised_strategy_function = get_strategy(normal_revised_strategy)
+            normal_revised_proposal = normal_revised_strategy_function(scenario)
+            normal_revised_result = evaluate_proposal(
+                scenario,
+                normal_revised_proposal,
+            )
+
         mediator_recommendation = mediator.recommend(
             current_strategy=current_strategy,
             decisions=decisions,
             result=result,
             counterproposal_summary=counterproposal_summary,
+            counterproposal_adjusted_result=counterproposal_adjusted_result,
+            normal_revised_strategy=normal_revised_strategy,
+            normal_revised_result=normal_revised_result,
         )
 
         rounds.append(
@@ -108,6 +124,9 @@ def run_mock_llm_multi_round_negotiation(
                 counterproposal_summary=counterproposal_summary,
                 counterproposal_adjusted_proposal=counterproposal_adjusted_proposal,
                 counterproposal_adjusted_result=counterproposal_adjusted_result,
+                normal_revised_strategy=normal_revised_strategy,
+                normal_revised_proposal=normal_revised_proposal,
+                normal_revised_result=normal_revised_result,
             )
         )
 
@@ -116,6 +135,14 @@ def run_mock_llm_multi_round_negotiation(
             break
 
         if mediator_recommendation.action == "stop_no_improvement":
+            break
+
+        if mediator_recommendation.action == "use_counterproposal_candidate":
+            agreement_reached = (
+                counterproposal_adjusted_result.agreement_reached
+                if counterproposal_adjusted_result is not None
+                else False
+            )
             break
 
         current_strategy = mediator_recommendation.recommended_strategy

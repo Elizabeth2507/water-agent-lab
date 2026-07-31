@@ -1666,3 +1666,19 @@ def test_llm_negotiate_mock_command_shows_counterproposal_candidate() -> None:
 
     assert result.exit_code == 0
     assert "Counterproposal conflict" in result.stdout
+
+
+def test_llm_negotiate_mock_command_shows_mediator_action() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Mediator action" in result.stdout

@@ -6,10 +6,14 @@ from water_agent_lab.simulator import minimum_first_allocation, proportional_all
 from water_agent_lab.counterproposals import summarize_counterproposals
 
 
-def test_mediator_recommends_revision_when_stakeholders_reject() -> None:
+def test_mediator_recommends_revision_when_normal_revision_is_best() -> None:
     scenario = load_scenario_config("configs/drought_mvp.yaml")
-    proposal = proportional_allocation(scenario)
-    result = evaluate_proposal(scenario, proposal)
+
+    current_proposal = proportional_allocation(scenario)
+    current_result = evaluate_proposal(scenario, current_proposal)
+
+    normal_revised_proposal = minimum_first_allocation(scenario)
+    normal_revised_result = evaluate_proposal(scenario, normal_revised_proposal)
 
     decisions = [
         AgentDecision(
@@ -28,19 +32,28 @@ def test_mediator_recommends_revision_when_stakeholders_reject() -> None:
         ),
     ]
 
+    counterproposal_summary = summarize_counterproposals(decisions)
+
     mediator = RuleBasedMediatorAgent()
 
     recommendation = mediator.recommend(
         current_strategy="proportional",
         decisions=decisions,
-        result=result,
+        result=current_result,
+        counterproposal_summary=counterproposal_summary,
+        counterproposal_adjusted_result=current_result,
+        normal_revised_strategy="minimum-first",
+        normal_revised_result=normal_revised_result,
     )
 
     assert recommendation.action == "revise_strategy"
-    assert recommendation.current_strategy == "proportional"
     assert recommendation.recommended_strategy == "minimum-first"
     assert recommendation.rejected_stakeholders == ["urban", "ecosystem"]
     assert recommendation.total_requested_extra_water == 3.0
+    assert recommendation.current_conflict_score == current_result.conflict_score
+    assert recommendation.revised_strategy_conflict_score == (
+        normal_revised_result.conflict_score
+    )
 
 
 def test_mediator_accepts_when_no_stakeholder_rejects() -> None:
@@ -136,3 +149,83 @@ def test_mediator_includes_counterproposal_pressure() -> None:
 
     assert recommendation.total_requested_extra_water == 4.0
     assert "4.00 extra water" in recommendation.summary
+
+
+def test_mediator_can_choose_normal_revision_over_counterproposal_candidate() -> None:
+    scenario = load_scenario_config("configs/drought_mvp.yaml")
+
+    current_proposal = proportional_allocation(scenario)
+    current_result = evaluate_proposal(scenario, current_proposal)
+
+    normal_revised_proposal = minimum_first_allocation(scenario)
+    normal_revised_result = evaluate_proposal(scenario, normal_revised_proposal)
+
+    decisions = [
+        AgentDecision(
+            stakeholder_name="ecosystem",
+            status="rejected",
+            argument="Ecosystem needs more water.",
+            requested_extra_water=4.0,
+            willingness_to_compromise=0.2,
+        )
+    ]
+
+    counterproposal_summary = summarize_counterproposals(decisions)
+
+    mediator = RuleBasedMediatorAgent()
+
+    recommendation = mediator.recommend(
+        current_strategy="proportional",
+        decisions=decisions,
+        result=current_result,
+        counterproposal_summary=counterproposal_summary,
+        counterproposal_adjusted_result=current_result,
+        normal_revised_strategy="minimum-first",
+        normal_revised_result=normal_revised_result,
+    )
+
+    assert recommendation.action == "revise_strategy"
+    assert recommendation.recommended_strategy == "minimum-first"
+    assert recommendation.revised_strategy_conflict_score == (
+        normal_revised_result.conflict_score
+    )
+
+
+def test_mediator_can_choose_counterproposal_candidate() -> None:
+    scenario = load_scenario_config("configs/drought_mvp.yaml")
+
+    current_proposal = proportional_allocation(scenario)
+    current_result = evaluate_proposal(scenario, current_proposal)
+
+    normal_revised_proposal = minimum_first_allocation(scenario)
+    normal_revised_result = evaluate_proposal(scenario, normal_revised_proposal)
+
+    decisions = [
+        AgentDecision(
+            stakeholder_name="ecosystem",
+            status="rejected",
+            argument="Ecosystem needs a targeted increase.",
+            requested_extra_water=4.0,
+            willingness_to_compromise=0.2,
+        )
+    ]
+
+    counterproposal_summary = summarize_counterproposals(decisions)
+
+    mediator = RuleBasedMediatorAgent()
+
+    recommendation = mediator.recommend(
+        current_strategy="proportional",
+        decisions=decisions,
+        result=current_result,
+        counterproposal_summary=counterproposal_summary,
+        counterproposal_adjusted_result=normal_revised_result,
+        normal_revised_strategy="minimum-first",
+        normal_revised_result=current_result,
+    )
+
+    assert recommendation.action == "use_counterproposal_candidate"
+    assert recommendation.total_requested_extra_water == 4.0
+    assert recommendation.counterproposal_conflict_score == (
+        normal_revised_result.conflict_score
+    )

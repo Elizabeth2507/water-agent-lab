@@ -5,8 +5,8 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from water_agent_lab.agent_models import AgentDecision, AgentMessage, AgentState
-from water_agent_lab.models import AllocationProposal, SimulationResult
 from water_agent_lab.mediator import MediatorRecommendation
+from water_agent_lab.models import AllocationProposal, SimulationResult
 
 
 class AgentRoundTranscript(BaseModel):
@@ -26,6 +26,9 @@ class AgentRoundTranscript(BaseModel):
     counterproposal_summary: Any | None = None
     counterproposal_adjusted_proposal: AllocationProposal | None = None
     counterproposal_adjusted_result: SimulationResult | None = None
+    normal_revised_strategy: str | None = None
+    normal_revised_proposal: AllocationProposal | None = None
+    normal_revised_result: SimulationResult | None = None
 
 
 class AgentNegotiationTranscript(BaseModel):

@@ -2022,10 +2022,12 @@ def llm_negotiate_mock(
     table.add_column("Conflict")
     table.add_column("Rejected")
     table.add_column("Requested extra")
+    table.add_column("Counterproposal conflict")
+    table.add_column("Normal revision conflict")
+    table.add_column("Mediator action")
     table.add_column("Messages")
     table.add_column("Avg frustration")
     table.add_column("Avg trust")
-    table.add_column("Counterproposal conflict")
 
     total_requested_extra = 0.0
 
@@ -2050,17 +2052,35 @@ def llm_negotiate_mock(
             if decision.status == "rejected"
         ]
 
-        counterproposal_conflict = (
-            round_transcript.counterproposal_adjusted_result.conflict_score
-            if round_transcript.counterproposal_adjusted_result is not None
-            else None
-        )
-
         requested_extra = sum(
             decision.requested_extra_water for decision in round_transcript.decisions
         )
 
         total_requested_extra += requested_extra
+
+        counterproposal_adjusted_result = (
+            round_transcript.counterproposal_adjusted_result
+        )
+        normal_revised_result = round_transcript.normal_revised_result
+        mediator_recommendation = round_transcript.mediator_recommendation
+
+        counterproposal_conflict = (
+            f"{counterproposal_adjusted_result.conflict_score:.3f}"
+            if counterproposal_adjusted_result is not None
+            else "n/a"
+        )
+
+        normal_revision_conflict = (
+            f"{normal_revised_result.conflict_score:.3f}"
+            if normal_revised_result is not None
+            else "n/a"
+        )
+
+        mediator_action = (
+            mediator_recommendation.action
+            if mediator_recommendation is not None
+            else "n/a"
+        )
 
         table.add_row(
             str(round_transcript.round_number),
@@ -2069,33 +2089,44 @@ def llm_negotiate_mock(
             f"{round_transcript.result.conflict_score:.3f}",
             ", ".join(rejected) if rejected else "none",
             f"{requested_extra:.2f}",
+            counterproposal_conflict,
+            normal_revision_conflict,
+            mediator_action,
             str(len(round_transcript.messages)),
             f"{average_frustration:.2f}",
             f"{average_trust:.2f}",
-            (
-                f"{counterproposal_conflict:.3f}"
-                if counterproposal_conflict is not None
-                else "n/a"
-            ),
         )
 
     console.print(table)
 
-    # Plain text line for tests and readable CLI output.
     console.print(f"Requested extra water: {total_requested_extra:.2f}")
 
     for round_transcript in transcript.rounds:
-        counterproposal_result = getattr(
-            round_transcript,
-            "counterproposal_adjusted_result",
-            None,
+        counterproposal_adjusted_result = (
+            round_transcript.counterproposal_adjusted_result
         )
+        normal_revised_result = round_transcript.normal_revised_result
+        mediator_recommendation = round_transcript.mediator_recommendation
 
-        if counterproposal_result is not None:
+        if counterproposal_adjusted_result is not None:
             console.print(
                 "Counterproposal conflict "
                 f"round {round_transcript.round_number}: "
-                f"{counterproposal_result.conflict_score:.3f}"
+                f"{counterproposal_adjusted_result.conflict_score:.3f}"
+            )
+
+        if normal_revised_result is not None:
+            console.print(
+                "Normal revision conflict "
+                f"round {round_transcript.round_number}: "
+                f"{normal_revised_result.conflict_score:.3f}"
+            )
+
+        if mediator_recommendation is not None:
+            console.print(
+                "Mediator action "
+                f"round {round_transcript.round_number}: "
+                f"{mediator_recommendation.action}"
             )
 
     console.print(f"Scenario: {transcript.scenario_name}")

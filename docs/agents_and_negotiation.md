@@ -515,7 +515,7 @@ Example:
   "requested_extra_water": 3.0,
   "willingness_to_compromise": 0.6
 }
-
+```
 
 ## Counterproposal-adjusted allocation candidates
 
@@ -540,6 +540,34 @@ no donor should be reduced below minimum acceptable water
 the total allocation must remain within the available water budget
 
 At this stage, the counterproposal-adjusted allocation is stored as a candidate. It does not yet replace the next round's strategy proposal. This keeps experiments easy to inspect and avoids hidden changes in negotiation behavior.
+```
+
+## Mediator choice between revision paths
+
+The mediator can now compare different revision paths:
+
+```text
+current proposal
+counterproposal-adjusted candidate
+normal revised-strategy candidate
+```
+
+The deterministic mediator ranks candidates using this priority order:
+
+```bash
+lower conflict score
+higher minimum satisfaction score
+higher fairness score
+lower shortage score
+```
+
+Possible mediator actions are:
+
+```bash
+accept_proposal
+revise_strategy
+use_counterproposal_candidate
+stop_no_improvement
 ```
 
 ## Future LLM-agent extension

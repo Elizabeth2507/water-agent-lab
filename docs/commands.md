@@ -530,6 +530,9 @@ The command also reports the total extra water requested by stakeholder counterp
 
 The command also reports the conflict score of the counterproposal-adjusted candidate when one is available.
 
+The command reports the mediator action for each round.
+
+
 ### `summarize-agent-memory`
 
 Build and summarize agent memory from a saved AI-agent transcript.
