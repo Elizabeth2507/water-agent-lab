@@ -29,3 +29,10 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.15.21",
 ]
+
+[project.optional-dependencies]
+local-llm = [
+    "transformers",
+    "torch",
+    "accelerate",
+]
