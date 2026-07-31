@@ -597,6 +597,30 @@ uv run water-agent-lab monte-carlo-report \
   --rounds-plot outputs/monte_carlo_rounds_histogram.png
 ```
 
+
+### `compare-negotiation-modes`
+
+Compare rule-based negotiation and mock LLM-style negotiation over the same scenario variations.
+
+```bash
+uv run water-agent-lab compare-negotiation-modes \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --runs 20 \
+  --seed 42 \
+  --output outputs/negotiation_mode_comparison.csv
+```
+
+This command produces two rows per scenario variant:
+
+```text
+rule_based
+mock_llm
+```
+
+Use it to compare agreement rate, conflict score, fairness, minimum satisfaction, shortage, and rounds used.
+
+
 ---
 
 ## Recommended workflows

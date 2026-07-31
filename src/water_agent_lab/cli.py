@@ -79,6 +79,9 @@ from water_agent_lab.monte_carlo_plotter import (
     plot_rounds_used_distribution,
 )
 from water_agent_lab.monte_carlo_reporting import generate_monte_carlo_report
+from water_agent_lab.negotiation_mode_comparison import (
+    run_negotiation_mode_comparison,
+)
 
 
 app = typer.Typer(
@@ -2381,6 +2384,116 @@ def monte_carlo_report(
 
     console.print(table)
     console.print(f"[green]Saved Monte Carlo report to {output}[/green]")
+
+
+@app.command("compare-negotiation-modes")
+def compare_negotiation_modes(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to the base drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Initial allocation strategy.",
+        ),
+    ] = "proportional",
+    runs: Annotated[
+        int,
+        typer.Option(
+            "--runs",
+            help="Number of scenario variants to compare.",
+        ),
+    ] = 20,
+    seed: Annotated[
+        int,
+        typer.Option(
+            "--seed",
+            help="Random seed for reproducible scenario variations.",
+        ),
+    ] = 42,
+    variation_fraction: Annotated[
+        float,
+        typer.Option(
+            "--variation-fraction",
+            help="Available-water variation fraction, for example 0.15 for ±15%.",
+        ),
+    ] = 0.15,
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save comparison results as CSV or JSON.",
+        ),
+    ] = Path("outputs/negotiation_mode_comparison.csv"),
+    work_dir: Annotated[
+        Path,
+        typer.Option(
+            "--work-dir",
+            help="Directory for generated temporary scenario variants.",
+        ),
+    ] = Path("outputs/negotiation_mode_variants"),
+) -> None:
+    """
+    Compare rule-based and mock LLM-style negotiation over scenario variations.
+    """
+    if output.suffix not in {".csv", ".json"}:
+        raise typer.BadParameter("Output file must end with .csv or .json.")
+
+    try:
+        rows = run_negotiation_mode_comparison(
+            config_path=config,
+            initial_strategy=strategy,
+            runs=runs,
+            seed=seed,
+            work_dir=work_dir,
+            variation_fraction=variation_fraction,
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    if output.suffix == ".csv":
+        save_results_csv(rows, output)
+    else:
+        save_results_json(rows, output)
+
+    rule_based_rows = [row for row in rows if row["mode"] == "rule_based"]
+    mock_llm_rows = [row for row in rows if row["mode"] == "mock_llm"]
+
+    table = Table(title="Negotiation Mode Comparison")
+
+    table.add_column("Mode")
+    table.add_column("Runs")
+    table.add_column("Agreement rate")
+    table.add_column("Average conflict")
+    table.add_column("Average rounds")
+
+    for mode_name, mode_rows in [
+        ("rule_based", rule_based_rows),
+        ("mock_llm", mock_llm_rows),
+    ]:
+        agreement_count = sum(1 for row in mode_rows if row["agreement_reached"])
+        average_conflict = sum(row["final_conflict_score"] for row in mode_rows) / len(
+            mode_rows
+        )
+        average_rounds = sum(row["rounds_used"] for row in mode_rows) / len(mode_rows)
+
+        table.add_row(
+            mode_name,
+            str(len(mode_rows)),
+            f"{agreement_count / len(mode_rows):.2f}",
+            f"{average_conflict:.3f}",
+            f"{average_rounds:.2f}",
+        )
+
+    console.print(table)
+    console.print(f"[green]Saved negotiation mode comparison to {output}[/green]")
 
 
 @app.command("version")

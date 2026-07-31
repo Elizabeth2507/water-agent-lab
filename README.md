@@ -60,6 +60,7 @@ WaterAgentLab currently supports:
 - Structured agent memory extracted from AI-agent transcripts
 - Monte Carlo runner for mock LLM negotiations
 - Monte Carlo reports and plots for mock LLM negotiations
+- Rule-based vs mock LLM negotiation mode comparison
 
 ---
 
@@ -558,6 +559,18 @@ uv run water-agent-lab monte-carlo-report \
   --input outputs/monte_carlo_mock.csv \
   --output docs/monte_carlo_report.md
 ```
+
+
+Compare rule-based negotiation with mock LLM-style negotiation:
+
+```bash
+uv run water-agent-lab compare-negotiation-modes \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --runs 20 \
+  --seed 42 \
+  --output outputs/negotiation_mode_comparison.csv
+  ```
 
 
 ## Design notes

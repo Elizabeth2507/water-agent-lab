@@ -1868,3 +1868,104 @@ def test_monte_carlo_report_command_rejects_non_markdown_output(tmp_path) -> Non
     )
 
     assert report_result.exit_code != 0
+
+
+def test_compare_negotiation_modes_command_csv(tmp_path) -> None:
+    output_path = tmp_path / "mode_comparison.csv"
+    work_dir = tmp_path / "variants"
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "3",
+            "--seed",
+            "42",
+            "--output",
+            str(output_path),
+            "--work-dir",
+            str(work_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Negotiation Mode Comparison" in result.stdout
+    assert "rule_based" in result.stdout
+    assert "mock_llm" in result.stdout
+
+    content = output_path.read_text(encoding="utf-8")
+
+    assert "mode" in content
+    assert "final_conflict_score" in content
+
+
+def test_compare_negotiation_modes_command_json(tmp_path) -> None:
+    output_path = tmp_path / "mode_comparison.json"
+    work_dir = tmp_path / "variants"
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--runs",
+            "2",
+            "--output",
+            str(output_path),
+            "--work-dir",
+            str(work_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved negotiation mode comparison" in result.stdout
+
+
+def test_compare_negotiation_modes_command_rejects_invalid_output_suffix(
+    tmp_path,
+) -> None:
+    output_path = tmp_path / "mode_comparison.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "2",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_compare_negotiation_modes_command_rejects_invalid_runs(tmp_path) -> None:
+    output_path = tmp_path / "mode_comparison.csv"
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--runs",
+            "0",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
