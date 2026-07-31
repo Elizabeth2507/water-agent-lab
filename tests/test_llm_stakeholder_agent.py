@@ -169,7 +169,7 @@ def test_llm_stakeholder_agent_rejects_invalid_backend_response() -> None:
         backend=InvalidBackend(),
     )
 
-    with pytest.raises(ValueError, match="LLM response is not valid JSON"):
+    with pytest.raises(ValueError, match="does not contain a JSON object"):
         agent.evaluate_allocation(
             stakeholder=stakeholder,
             proposal=proposal,
