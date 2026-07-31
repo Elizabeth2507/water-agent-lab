@@ -41,5 +41,6 @@ def test_evaluate_single_llm_stakeholder_with_mock_backend() -> None:
     )
 
     assert decision.stakeholder_name == "urban"
-    assert decision.status in {"accepted", "concerned", "rejected"}
+    assert decision.status == "rejected"
+    assert decision.requested_extra_water > 0
     assert decision.argument

@@ -2179,28 +2179,6 @@ def test_qwen_smoke_test_command_handles_missing_optional_dependencies(
     assert "QwenLocalBackend requires optional dependencies" in result.stdout
 
 
-def test_llm_evaluate_stakeholder_command_with_mock_backend() -> None:
-    result = runner.invoke(
-        app,
-        [
-            "llm-evaluate-stakeholder",
-            "--config",
-            "configs/drought_mvp.yaml",
-            "--strategy",
-            "proportional",
-            "--stakeholder",
-            "urban",
-            "--backend",
-            "mock",
-        ],
-    )
-
-    assert result.exit_code == 0
-    assert "LLM Stakeholder Evaluation" in result.stdout
-    assert "Status:" in result.stdout
-    assert "Stakeholder: urban" in result.stdout
-
-
 def test_llm_evaluate_stakeholder_command_saves_json(tmp_path) -> None:
     output_path = tmp_path / "decision.json"
 
@@ -2224,6 +2202,11 @@ def test_llm_evaluate_stakeholder_command_saves_json(tmp_path) -> None:
     assert result.exit_code == 0
     assert output_path.exists()
     assert "Saved AgentDecision" in result.stdout
+
+    saved_data = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert saved_data["stakeholder_name"] == "urban"
+    assert saved_data["status"] == "rejected"
 
 
 def test_llm_evaluate_stakeholder_command_rejects_unknown_stakeholder() -> None:
@@ -2298,3 +2281,24 @@ def test_llm_evaluate_stakeholder_command_handles_missing_qwen_dependencies(
 
     assert result.exit_code == 1
     assert "QwenLocalBackend requires optional dependencies" in result.stdout
+
+
+def test_llm_evaluate_stakeholder_command_with_mock_backend() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-evaluate-stakeholder",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--stakeholder",
+            "urban",
+            "--backend",
+            "mock",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Stakeholder: urban" in result.stdout
+    assert "Status: rejected" in result.stdout

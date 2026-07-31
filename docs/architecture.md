@@ -192,6 +192,8 @@ For a quick demo, run:
 uv run water-agent-lab demo
 ```
 
+The LLM backend layer supports multiple implementations. The default test backend is `MockLLMBackend`; an optional `QwenLocalBackend` can be used locally for real model inference without changing the agent interface.
+
 ## Current limitations
 
 WaterAgentLab currently uses synthetic drought scenarios. It does not yet use real hydrological data, legal restriction data, or LLM-based stakeholder negotiation.

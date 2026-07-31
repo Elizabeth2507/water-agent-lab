@@ -1,3 +1,5 @@
+import json
+import re
 from typing import Protocol
 
 from pydantic import BaseModel, Field
@@ -65,3 +67,119 @@ class MockLLMBackend:
             model_name=self.model_name,
             backend_name=self.backend_name,
         )
+
+
+class StakeholderAwareMockLLMBackend:
+    """
+    Mock backend that returns an AgentDecision based on the stakeholder context
+    embedded in the prompt.
+
+    This is useful for testing the LLM agent interface without loading a real
+    model. It keeps the same backend interface as real LLM backends, but the
+    output is deterministic and easy to test.
+    """
+
+    backend_name = "stakeholder-aware-mock"
+    model_name = "stakeholder-aware-mock-llm"
+
+    def __init__(self) -> None:
+        self.requests: list[LLMGenerationRequest] = []
+
+    def generate(self, request: LLMGenerationRequest) -> LLMGenerationResponse:
+        self.requests.append(request)
+
+        stakeholder_name = self._extract_string(
+            text=request.user_prompt,
+            field_name="name",
+            default="unknown",
+        )
+        requested_water = self._extract_number(
+            text=request.user_prompt,
+            field_name="requested_water",
+            default=1.0,
+        )
+        minimum_acceptable_water = self._extract_number(
+            text=request.user_prompt,
+            field_name="minimum_acceptable_water",
+            default=0.0,
+        )
+        allocated_water = self._extract_number(
+            text=request.user_prompt,
+            field_name="allocated_water",
+            default=0.0,
+        )
+
+        if allocated_water < minimum_acceptable_water:
+            status = "rejected"
+            requested_extra_water = minimum_acceptable_water - allocated_water
+            willingness_to_compromise = 0.3
+            argument = (
+                f"{stakeholder_name} rejects the proposal because allocated "
+                "water is below the minimum acceptable level."
+            )
+
+        elif allocated_water / max(requested_water, 1.0) < 0.9:
+            status = "concerned"
+            requested_extra_water = requested_water - allocated_water
+            willingness_to_compromise = 0.6
+            argument = (
+                f"{stakeholder_name} is concerned because the allocation is "
+                "above the minimum but still below the requested amount."
+            )
+
+        else:
+            status = "accepted"
+            requested_extra_water = 0.0
+            willingness_to_compromise = 0.9
+            argument = (
+                f"{stakeholder_name} accepts the proposal because the "
+                "allocation is close to the requested amount."
+            )
+
+        response = {
+            "stakeholder_name": stakeholder_name,
+            "status": status,
+            "argument": argument,
+            "requested_extra_water": max(requested_extra_water, 0.0),
+            "willingness_to_compromise": willingness_to_compromise,
+        }
+
+        return LLMGenerationResponse(
+            text=json.dumps(response),
+            model_name=self.model_name,
+            backend_name=self.backend_name,
+        )
+
+    @staticmethod
+    def _extract_number(
+        text: str,
+        field_name: str,
+        default: float,
+    ) -> float:
+        """
+        Extract a numeric field from the JSON-like context inside the prompt.
+        """
+        pattern = rf'"{re.escape(field_name)}"\s*:\s*([0-9]+(?:\.[0-9]+)?)'
+        match = re.search(pattern, text)
+
+        if match is None:
+            return default
+
+        return float(match.group(1))
+
+    @staticmethod
+    def _extract_string(
+        text: str,
+        field_name: str,
+        default: str,
+    ) -> str:
+        """
+        Extract a string field from the JSON-like context inside the prompt.
+        """
+        pattern = rf'"{re.escape(field_name)}"\s*:\s*"([^"]+)"'
+        match = re.search(pattern, text)
+
+        if match is None:
+            return default
+
+        return match.group(1)

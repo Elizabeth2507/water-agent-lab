@@ -706,6 +706,24 @@ uv run water-agent-lab llm-evaluate-stakeholder \
 ```
 
 
+## Stakeholder-aware mock backend
+
+The default `mock` backend is stakeholder-aware.
+
+It reads the stakeholder allocation context from the prompt and returns a structured `AgentDecision` using deterministic rules:
+
+```text
+allocated_water < minimum_acceptable_water
+- rejected
+
+allocated_water is above minimum but below 90% of requested_water
+- concerned
+
+allocated_water is close to requested_water
+- accepted
+```
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
