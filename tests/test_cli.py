@@ -1969,3 +1969,88 @@ def test_compare_negotiation_modes_command_rejects_invalid_runs(tmp_path) -> Non
     )
 
     assert result.exit_code != 0
+
+
+def test_compare_negotiation_modes_report_command(tmp_path) -> None:
+    input_path = tmp_path / "comparison.csv"
+    output_path = tmp_path / "report.md"
+    conflict_plot_path = tmp_path / "conflict.png"
+    agreement_plot_path = tmp_path / "agreement.png"
+    rounds_plot_path = tmp_path / "rounds.png"
+
+    input_path.write_text(
+        "\n".join(
+            [
+                "scenario_name,mode,initial_strategy,final_strategy,agreement_reached,rounds_used,final_conflict_score",
+                "moderate,rule_based,proportional,minimum-first,False,2,0.5",
+                "moderate,mock_llm,proportional,minimum-first,True,2,0.25",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes-report",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--conflict-plot",
+            str(conflict_plot_path),
+            "--agreement-plot",
+            str(agreement_plot_path),
+            "--rounds-plot",
+            str(rounds_plot_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert conflict_plot_path.exists()
+    assert agreement_plot_path.exists()
+    assert rounds_plot_path.exists()
+    assert "Generated negotiation mode comparison report" in result.stdout
+
+
+def test_compare_negotiation_modes_report_command_rejects_non_csv_input(
+    tmp_path,
+) -> None:
+    input_path = tmp_path / "comparison.txt"
+    output_path = tmp_path / "report.md"
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes-report",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Input file must be a .csv file" in result.output
+
+
+def test_compare_negotiation_modes_report_command_rejects_non_md_output(
+    tmp_path,
+) -> None:
+    input_path = tmp_path / "comparison.csv"
+    output_path = tmp_path / "report.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "compare-negotiation-modes-report",
+            "--input",
+            str(input_path),
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Output report file must be a .md file" in result.output
