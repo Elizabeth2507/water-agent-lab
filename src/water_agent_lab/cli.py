@@ -2021,22 +2021,23 @@ def llm_negotiate_mock(
     table.add_column("Agreement")
     table.add_column("Conflict")
     table.add_column("Rejected")
+    table.add_column("Requested extra")
     table.add_column("Messages")
     table.add_column("Avg frustration")
     table.add_column("Avg trust")
 
+    total_requested_extra = 0.0
+
     for round_transcript in transcript.rounds:
         round_agent_states = getattr(round_transcript, "agent_states", {})
-        agent_states = round_agent_states.values()
 
         if round_agent_states:
             average_frustration = sum(
-                state.frustration for state in agent_states
+                state.frustration for state in round_agent_states.values()
             ) / len(round_agent_states)
 
-            agent_states = round_agent_states.values()
             average_trust = sum(
-                state.trust_in_mediator for state in agent_states
+                state.trust_in_mediator for state in round_agent_states.values()
             ) / len(round_agent_states)
         else:
             average_frustration = 0.0
@@ -2048,18 +2049,28 @@ def llm_negotiate_mock(
             if decision.status == "rejected"
         ]
 
+        requested_extra = sum(
+            decision.requested_extra_water for decision in round_transcript.decisions
+        )
+
+        total_requested_extra += requested_extra
+
         table.add_row(
             str(round_transcript.round_number),
             round_transcript.strategy,
             str(round_transcript.result.agreement_reached),
             f"{round_transcript.result.conflict_score:.3f}",
             ", ".join(rejected) if rejected else "none",
+            f"{requested_extra:.2f}",
             str(len(round_transcript.messages)),
             f"{average_frustration:.2f}",
             f"{average_trust:.2f}",
         )
 
     console.print(table)
+
+    # Plain text line for tests and readable CLI output.
+    console.print(f"Requested extra water: {total_requested_extra:.2f}")
 
     console.print(f"Scenario: {transcript.scenario_name}")
     console.print(f"Backend: {transcript.backend_name}")

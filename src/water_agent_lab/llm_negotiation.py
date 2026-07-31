@@ -12,6 +12,7 @@ from water_agent_lab.strategies import get_strategy
 from water_agent_lab.agent_memory import AgentMemory
 from water_agent_lab.agent_state_manager import initialize_agent_states
 from water_agent_lab.mediator import RuleBasedMediatorAgent
+from water_agent_lab.counterproposals import summarize_counterproposals
 
 
 def run_mock_llm_multi_round_negotiation(
@@ -53,10 +54,13 @@ def run_mock_llm_multi_round_negotiation(
             agent_states=agent_states,
         )
 
+        counterproposal_summary = summarize_counterproposals(decisions)
+
         mediator_recommendation = mediator.recommend(
             current_strategy=current_strategy,
             decisions=decisions,
             result=result,
+            counterproposal_summary=counterproposal_summary,
         )
 
         messages = [
@@ -104,6 +108,7 @@ def run_mock_llm_multi_round_negotiation(
                 for stakeholder_name, state in agent_states.items()
             },
             mediator_recommendation=mediator_recommendation,
+            counterproposal_summary=counterproposal_summary,
         )
         rounds.append(round_transcript)
 

@@ -141,3 +141,30 @@ def test_mock_llm_multi_round_negotiation_uses_mediator_revision() -> None:
         assert (
             transcript.rounds[1].strategy == first_recommendation.recommended_strategy
         )
+
+
+def test_mock_llm_multi_round_negotiation_records_counterproposal_summary() -> None:
+    transcript = run_mock_llm_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    first_round = transcript.rounds[0]
+
+    assert first_round.counterproposal_summary is not None
+    assert first_round.counterproposal_summary.total_requested_extra_water >= 0.0
+
+
+def test_mediator_recommendation_records_requested_extra_water() -> None:
+    transcript = run_mock_llm_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    first_round = transcript.rounds[0]
+
+    assert first_round.mediator_recommendation is not None
+    assert (
+        first_round.mediator_recommendation.total_requested_extra_water
+        == first_round.counterproposal_summary.total_requested_extra_water
+    )

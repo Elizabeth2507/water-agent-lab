@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from water_agent_lab.agent_models import AgentDecision
 from water_agent_lab.models import SimulationResult
 from water_agent_lab.negotiation import choose_revision_strategy
+from water_agent_lab.counterproposals import CounterproposalSummary
 
 
 MediatorAction = Literal[
@@ -24,6 +25,7 @@ class MediatorRecommendation(BaseModel):
     recommended_strategy: str
     rejected_stakeholders: list[str] = Field(default_factory=list)
     concerned_stakeholders: list[str] = Field(default_factory=list)
+    total_requested_extra_water: float = 0.0
     summary: str
 
 
@@ -41,7 +43,15 @@ class RuleBasedMediatorAgent:
         current_strategy: str,
         decisions: list[AgentDecision],
         result: SimulationResult,
+        counterproposal_summary: CounterproposalSummary | None = None,
     ) -> MediatorRecommendation:
+
+        total_requested_extra_water = (
+            counterproposal_summary.total_requested_extra_water
+            if counterproposal_summary is not None
+            else sum(decision.requested_extra_water for decision in decisions)
+        )
+
         rejected_stakeholders = [
             decision.stakeholder_name
             for decision in decisions
@@ -91,6 +101,8 @@ class RuleBasedMediatorAgent:
             summary=(
                 "Some stakeholders rejected the proposal. "
                 f"The mediator recommends switching from {current_strategy} "
-                f"to {recommended_strategy}."
+                f"to {recommended_strategy}. "
+                f"Stakeholders requested {total_requested_extra_water:.2f} extra water units."
             ),
+            total_requested_extra_water=total_requested_extra_water,
         )

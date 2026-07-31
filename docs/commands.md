@@ -526,6 +526,8 @@ The command also reports average frustration and trust across stakeholder agents
 
 The command reports stakeholder rejection, average agent state, and mediator action for each round.
 
+The command also reports the total extra water requested by stakeholder counterproposals.
+
 ### `summarize-agent-memory`
 
 Build and summarize agent memory from a saved AI-agent transcript.

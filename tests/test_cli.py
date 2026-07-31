@@ -1634,3 +1634,19 @@ def test_summarize_agent_memory_command_rejects_non_json_output(tmp_path) -> Non
     )
 
     assert memory_result.exit_code != 0
+
+
+def test_llm_negotiate_mock_command_shows_counterproposal_pressure() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate-mock",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Requested extra" in result.stdout

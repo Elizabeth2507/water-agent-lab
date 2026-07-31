@@ -500,6 +500,23 @@ simulation metrics
 current strategy
 ```
 
+
+## Counterproposal handling
+
+Stakeholder agents can now produce counterproposal pressure through the `requested_extra_water` field in `AgentDecision`.
+
+Example:
+
+```json
+{
+  "stakeholder_name": "agriculture",
+  "status": "concerned",
+  "argument": "Agriculture needs additional water to reduce crop losses.",
+  "requested_extra_water": 3.0,
+  "willingness_to_compromise": 0.6
+}
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
