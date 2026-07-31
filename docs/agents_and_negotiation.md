@@ -592,6 +592,40 @@ uv run water-agent-lab monte-carlo-report \
   --output docs/monte_carlo_report.md
 ```
 
+## Comparing negotiation modes
+
+WaterAgentLab can compare deterministic rule-based negotiation with mock LLM-style negotiation over the same Monte Carlo scenario variants.
+
+This is useful because it separates two questions:
+
+```text
+How does the base negotiation algorithm behave?
+How does the agent-style mediator/memory/counterproposal layer change outcomes?
+```
+
+Example:
+
+uv run water-agent-lab compare-negotiation-modes \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --runs 20 \
+  --seed 42 \
+  --output outputs/negotiation_mode_comparison.csv
+
+The output contains one row per mode per run, making it easy to compare agreement rates and final conflict scores
+
+
+## Negotiation mode comparison reports
+
+Mode-comparison results can be summarized with:
+
+```bash
+uv run water-agent-lab compare-negotiation-modes-report \
+  --input outputs/negotiation_mode_comparison.csv \
+  --output docs/negotiation_mode_comparison_report.md
+```
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

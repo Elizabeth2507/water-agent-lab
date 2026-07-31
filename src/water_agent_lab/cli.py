@@ -82,6 +82,9 @@ from water_agent_lab.monte_carlo_reporting import generate_monte_carlo_report
 from water_agent_lab.negotiation_mode_comparison import (
     run_negotiation_mode_comparison,
 )
+from water_agent_lab.negotiation_mode_reporting import (
+    generate_negotiation_mode_comparison_report,
+)
 
 
 app = typer.Typer(
@@ -2494,6 +2497,81 @@ def compare_negotiation_modes(
 
     console.print(table)
     console.print(f"[green]Saved negotiation mode comparison to {output}[/green]")
+
+
+@app.command("compare-negotiation-modes-report")
+def compare_negotiation_modes_report(
+    input_path: Annotated[
+        Path,
+        typer.Option(
+            "--input",
+            "-i",
+            help="Path to negotiation mode comparison CSV.",
+        ),
+    ] = Path("outputs/negotiation_mode_comparison.csv"),
+    output_path: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to save the Markdown comparison report.",
+        ),
+    ] = Path("docs/negotiation_mode_comparison_report.md"),
+    conflict_plot_path: Annotated[
+        Path,
+        typer.Option(
+            "--conflict-plot",
+            help="Path to save the conflict comparison plot.",
+        ),
+    ] = Path("outputs/mode_comparison_conflict.png"),
+    agreement_plot_path: Annotated[
+        Path,
+        typer.Option(
+            "--agreement-plot",
+            help="Path to save the agreement comparison plot.",
+        ),
+    ] = Path("outputs/mode_comparison_agreement.png"),
+    rounds_plot_path: Annotated[
+        Path,
+        typer.Option(
+            "--rounds-plot",
+            help="Path to save the rounds comparison plot.",
+        ),
+    ] = Path("outputs/mode_comparison_rounds.png"),
+) -> None:
+    """
+    Generate a Markdown report and plots from negotiation mode comparison results.
+    """
+    if input_path.suffix != ".csv":
+        raise typer.BadParameter("Input file must be a .csv file.")
+
+    if output_path.suffix != ".md":
+        raise typer.BadParameter("Output report file must be a .md file.")
+
+    for plot_path in (
+        conflict_plot_path,
+        agreement_plot_path,
+        rounds_plot_path,
+    ):
+        if plot_path.suffix != ".png":
+            raise typer.BadParameter("Plot output files must be .png files.")
+
+    try:
+        generate_negotiation_mode_comparison_report(
+            input_path=input_path,
+            output_path=output_path,
+            conflict_plot_path=conflict_plot_path,
+            agreement_plot_path=agreement_plot_path,
+            rounds_plot_path=rounds_plot_path,
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    console.print("[green]Generated negotiation mode comparison report[/green]")
+    console.print(f"Report: {output_path}")
+    console.print(f"Conflict plot: {conflict_plot_path}")
+    console.print(f"Agreement plot: {agreement_plot_path}")
+    console.print(f"Rounds plot: {rounds_plot_path}")
 
 
 @app.command("version")

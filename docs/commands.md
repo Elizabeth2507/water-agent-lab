@@ -621,6 +621,20 @@ mock_llm
 Use it to compare agreement rate, conflict score, fairness, minimum satisfaction, shortage, and rounds used.
 
 
+### `compare-negotiation-modes-report`
+
+Generate a Markdown report and plots comparing rule-based and mock LLM negotiation modes.
+
+```bash
+uv run water-agent-lab compare-negotiation-modes-report \
+  --input outputs/negotiation_mode_comparison.csv \
+  --output docs/negotiation_mode_comparison_report.md \
+  --conflict-plot outputs/mode_comparison_conflict.png \
+  --agreement-plot outputs/mode_comparison_agreement.png \
+  --rounds-plot outputs/mode_comparison_rounds.png
+```
+
+
 ---
 
 ## Recommended workflows

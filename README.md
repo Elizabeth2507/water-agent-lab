@@ -61,6 +61,7 @@ WaterAgentLab currently supports:
 - Monte Carlo runner for mock LLM negotiations
 - Monte Carlo reports and plots for mock LLM negotiations
 - Rule-based vs mock LLM negotiation mode comparison
+- Reports and plots for rule-based vs mock LLM negotiation comparison
 
 ---
 
@@ -571,6 +572,15 @@ uv run water-agent-lab compare-negotiation-modes \
   --seed 42 \
   --output outputs/negotiation_mode_comparison.csv
   ```
+
+
+Generate a comparison report:
+
+```bash
+uv run water-agent-lab compare-negotiation-modes-report \
+  --input outputs/negotiation_mode_comparison.csv \
+  --output docs/negotiation_mode_comparison_report.md
+```
 
 
 ## Design notes
