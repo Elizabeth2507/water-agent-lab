@@ -2022,8 +2022,26 @@ def llm_negotiate_mock(
     table.add_column("Conflict")
     table.add_column("Rejected")
     table.add_column("Messages")
+    table.add_column("Avg frustration")
+    table.add_column("Avg trust")
 
     for round_transcript in transcript.rounds:
+        round_agent_states = getattr(round_transcript, "agent_states", {})
+        agent_states = round_agent_states.values()
+
+        if round_agent_states:
+            average_frustration = sum(
+                state.frustration for state in agent_states
+            ) / len(round_agent_states)
+
+            agent_states = round_agent_states.values()
+            average_trust = sum(
+                state.trust_in_mediator for state in agent_states
+            ) / len(round_agent_states)
+        else:
+            average_frustration = 0.0
+            average_trust = 0.0
+
         rejected = [
             decision.stakeholder_name
             for decision in round_transcript.decisions
@@ -2037,6 +2055,8 @@ def llm_negotiate_mock(
             f"{round_transcript.result.conflict_score:.3f}",
             ", ".join(rejected) if rejected else "none",
             str(len(round_transcript.messages)),
+            f"{average_frustration:.2f}",
+            f"{average_trust:.2f}",
         )
 
     console.print(table)

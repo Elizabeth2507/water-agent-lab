@@ -3,6 +3,10 @@ from water_agent_lab.agent_transcript import (
     save_agent_transcript_json,
 )
 from water_agent_lab.llm_negotiation import run_mock_llm_multi_round_negotiation
+from water_agent_lab.agent_state_manager import initialize_agent_states
+from water_agent_lab.config import load_scenario_config
+from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
+from water_agent_lab.strategies import proportional_allocation
 
 
 def test_run_mock_llm_multi_round_negotiation() -> None:
@@ -71,3 +75,67 @@ def test_mock_llm_multi_round_negotiation_transcript_can_be_saved_and_loaded(
     assert loaded.scenario_name == transcript.scenario_name
     assert loaded.rounds_used == transcript.rounds_used
     assert len(loaded.rounds) == len(transcript.rounds)
+
+
+def test_mock_llm_responses_persist_agent_state_between_rounds() -> None:
+    scenario = load_scenario_config("configs/drought_mvp.yaml")
+    proposal = proportional_allocation(scenario)
+
+    agent_states = initialize_agent_states(
+        stakeholder_names=[stakeholder.name for stakeholder in scenario.stakeholders]
+    )
+
+    first_round_decisions = run_mock_llm_stakeholder_responses(
+        scenario=scenario,
+        proposal=proposal,
+        round_number=1,
+        agent_states=agent_states,
+    )
+
+    agriculture_first_state = agent_states["agriculture"].model_copy()
+
+    second_round_decisions = run_mock_llm_stakeholder_responses(
+        scenario=scenario,
+        proposal=proposal,
+        round_number=2,
+        agent_states=agent_states,
+    )
+
+    agriculture_second_state = agent_states["agriculture"]
+
+    assert len(first_round_decisions) == len(scenario.stakeholders)
+    assert len(second_round_decisions) == len(scenario.stakeholders)
+    assert agriculture_second_state.frustration >= agriculture_first_state.frustration
+    assert agriculture_second_state.last_status is not None
+
+
+def test_mock_llm_multi_round_negotiation_records_mediator_recommendation() -> None:
+    transcript = run_mock_llm_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    first_round = transcript.rounds[0]
+
+    assert first_round.mediator_recommendation is not None
+    assert first_round.mediator_recommendation.current_strategy == "proportional"
+    assert first_round.mediator_recommendation.action in {
+        "accept_proposal",
+        "revise_strategy",
+        "stop_no_improvement",
+    }
+
+
+def test_mock_llm_multi_round_negotiation_uses_mediator_revision() -> None:
+    transcript = run_mock_llm_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+    )
+
+    first_recommendation = transcript.rounds[0].mediator_recommendation
+
+    assert first_recommendation is not None
+
+    if first_recommendation.action == "revise_strategy":
+        assert transcript.rounds_used > 1
+        assert transcript.rounds[1].strategy == first_recommendation.recommended_strategy

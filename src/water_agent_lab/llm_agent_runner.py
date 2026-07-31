@@ -1,13 +1,13 @@
 import json
 
-from water_agent_lab.agent_models import AgentDecision
+from water_agent_lab.agent_memory import AgentMemory
+from water_agent_lab.agent_models import AgentDecision, AgentState
 from water_agent_lab.llm_backends import MockLLMBackend
 from water_agent_lab.llm_stakeholder_agent import (
     LLMStakeholderAgent,
     build_default_agent_profile,
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
-from water_agent_lab.agent_memory import AgentMemory
 
 
 def build_mock_decision_response_text(
@@ -58,11 +58,14 @@ def run_mock_llm_stakeholder_responses(
     proposal: AllocationProposal,
     round_number: int = 1,
     memory: AgentMemory | None = None,
+    agent_states: dict[str, AgentState] | None = None,
 ) -> list[AgentDecision]:
     """
     Evaluate all stakeholders using LLMStakeholderAgent with MockLLMBackend.
 
     This gives deterministic, testable LLM-style stakeholder decisions.
+
+    If agent_states is provided, each stakeholder keeps state across rounds.
     """
     decisions: list[AgentDecision] = []
 
@@ -80,9 +83,16 @@ def run_mock_llm_stakeholder_responses(
 
         profile = build_default_agent_profile(stakeholder)
 
+        state = (
+            agent_states.get(stakeholder.name, AgentState()).model_copy()
+            if agent_states is not None
+            else AgentState()
+        )
+
         agent = LLMStakeholderAgent(
             profile=profile,
             backend=backend,
+            state=state,
             memory=memory,
         )
 
@@ -92,6 +102,9 @@ def run_mock_llm_stakeholder_responses(
             round_number=round_number,
             scenario=scenario,
         )
+
+        if agent_states is not None:
+            agent_states[stakeholder.name] = agent.state.model_copy()
 
         decisions.append(decision)
 

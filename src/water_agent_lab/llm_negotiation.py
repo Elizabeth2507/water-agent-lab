@@ -11,6 +11,8 @@ from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
 from water_agent_lab.negotiation import choose_revision_strategy
 from water_agent_lab.strategies import get_strategy
 from water_agent_lab.agent_memory import AgentMemory
+from water_agent_lab.agent_state_manager import initialize_agent_states
+from water_agent_lab.mediator import RuleBasedMediatorAgent
 
 
 def run_mock_llm_multi_round_negotiation(
@@ -31,6 +33,12 @@ def run_mock_llm_multi_round_negotiation(
 
     memory = AgentMemory()
 
+    agent_states = initialize_agent_states(
+        stakeholder_names=[stakeholder.name for stakeholder in scenario.stakeholders]
+    )
+
+    mediator = RuleBasedMediatorAgent()
+
     for round_number in range(1, scenario.max_rounds + 1):
         strategy_function = get_strategy(current_strategy)
         proposal = strategy_function(scenario)
@@ -40,7 +48,15 @@ def run_mock_llm_multi_round_negotiation(
         decisions = run_mock_llm_stakeholder_responses(
             scenario=scenario,
             proposal=proposal,
+            round_number=round_number,
             memory=memory,
+            agent_states=agent_states,
+        )
+
+        mediator_recommendation = mediator.recommend(
+            current_strategy=current_strategy,
+            decisions=decisions,
+            result=result,
         )
 
         messages = [
@@ -83,6 +99,11 @@ def run_mock_llm_multi_round_negotiation(
             messages=messages,
             result=result,
             memory_summary=round_memory_summary,
+            agent_states={
+                stakeholder_name: state.model_copy()
+                for stakeholder_name, state in agent_states.items()
+            },
+            mediator_recommendation=mediator_recommendation,
         )
         rounds.append(round_transcript)
 
@@ -90,12 +111,15 @@ def run_mock_llm_multi_round_negotiation(
             agreement_reached = True
             break
 
-        revised_strategy = choose_revision_strategy(current_strategy)
 
-        if revised_strategy == current_strategy:
+        if mediator_recommendation.action == "accept_proposal":
+            agreement_reached = True
             break
 
-        current_strategy = revised_strategy
+        if mediator_recommendation.action == "stop_no_improvement":
+            break
+
+        current_strategy = mediator_recommendation.recommended_strategy
 
     return AgentNegotiationTranscript(
         scenario_name=scenario.scenario_name,

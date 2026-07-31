@@ -465,6 +465,25 @@ The memory summary can contain events such as:
 ```text
 Round 1 | ecosystem | rejection | Ecosystem rejected because allocation was below minimum.
 Round 1 | agriculture | decision | Agriculture was concerned because allocation was below request.
+```
+
+
+## Persistent agent state
+
+WaterAgentLab now tracks stakeholder state across mock LLM negotiation rounds.
+
+Each stakeholder has an `AgentState` with:
+
+| Field | Meaning |
+|---|---|
+| `frustration` | Increases when the stakeholder is concerned or rejects a proposal. |
+| `trust_in_mediator` | Decreases after rejection and increases after acceptance. |
+| `concessions_made` | Counts cases where an agent moves from concern/rejection to acceptance. |
+| `last_status` | Stores the stakeholder's previous decision status. |
+
+This is useful because future Qwen-based agents should not only remember previous messages. They should also have a compact internal state that changes over the negotiation.
+
+The current state update rules are deterministic and simple. They are not meant to be a psychological model. They are an engineering foundation for future experiments.
 
 
 ## Future LLM-agent extension
