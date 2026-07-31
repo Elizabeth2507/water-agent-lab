@@ -6,6 +6,7 @@ from typer.testing import CliRunner
 from water_agent_lab.cli import app
 from water_agent_lab.qwen_backend import OptionalDependencyError
 
+
 runner = CliRunner()
 
 
@@ -2169,6 +2170,127 @@ def test_qwen_smoke_test_command_handles_missing_optional_dependencies(
         app,
         [
             "qwen-smoke-test",
+            "--model",
+            "Qwen/Qwen2.5-1.5B-Instruct",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "QwenLocalBackend requires optional dependencies" in result.stdout
+
+
+def test_llm_evaluate_stakeholder_command_with_mock_backend() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-evaluate-stakeholder",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--stakeholder",
+            "urban",
+            "--backend",
+            "mock",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "LLM Stakeholder Evaluation" in result.stdout
+    assert "Status:" in result.stdout
+    assert "Stakeholder: urban" in result.stdout
+
+
+def test_llm_evaluate_stakeholder_command_saves_json(tmp_path) -> None:
+    output_path = tmp_path / "decision.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-evaluate-stakeholder",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--stakeholder",
+            "urban",
+            "--backend",
+            "mock",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved AgentDecision" in result.stdout
+
+
+def test_llm_evaluate_stakeholder_command_rejects_unknown_stakeholder() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-evaluate-stakeholder",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--stakeholder",
+            "unknown",
+            "--backend",
+            "mock",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Unknown stakeholder" in result.output
+
+
+def test_llm_evaluate_stakeholder_command_rejects_invalid_output_suffix(
+    tmp_path,
+) -> None:
+    output_path = tmp_path / "decision.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-evaluate-stakeholder",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--stakeholder",
+            "urban",
+            "--backend",
+            "mock",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Output file must end with .json" in result.output
+
+
+def test_llm_evaluate_stakeholder_command_handles_missing_qwen_dependencies(
+    monkeypatch,
+) -> None:
+    def fake_evaluate_single_llm_stakeholder(*args, **kwargs):
+        raise OptionalDependencyError(
+            "QwenLocalBackend requires optional dependencies."
+        )
+
+    monkeypatch.setattr(
+        "water_agent_lab.cli.evaluate_single_llm_stakeholder",
+        fake_evaluate_single_llm_stakeholder,
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-evaluate-stakeholder",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--stakeholder",
+            "urban",
+            "--backend",
+            "qwen-local",
             "--model",
             "Qwen/Qwen2.5-1.5B-Instruct",
         ],

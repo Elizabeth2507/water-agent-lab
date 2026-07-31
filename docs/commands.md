@@ -674,7 +674,33 @@ This command is intended for local use only. It is not required for CI.
 
 The Qwen smoke test uses robust JSON extraction by default, so it can parse common model outputs that include Markdown fences or short explanations around the JSON object.
 
+
+## llm-evaluate-stakeholder
+
+Evaluate one stakeholder allocation using an LLM backend.
+
+Mock backend:
+
+```bash
+uv run water-agent-lab llm-evaluate-stakeholder \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --stakeholder urban \
+  --backend mock
+```
+
+local Qwen backend:
+
+```bash
+uv run water-agent-lab llm-evaluate-stakeholder \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --stakeholder urban \
+  --backend qwen-local \
+  --model Qwen/Qwen2.5-1.5B-Instruct
+```
 ---
+
 
 ## Recommended workflows
 

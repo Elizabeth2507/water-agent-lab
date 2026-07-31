@@ -88,6 +88,7 @@ from water_agent_lab.negotiation_mode_reporting import (
 from water_agent_lab.ai_agent_experiment import run_ai_agent_experiment
 from water_agent_lab.qwen_backend import OptionalDependencyError
 from water_agent_lab.qwen_smoke_test import run_qwen_smoke_test
+from water_agent_lab.llm_single_agent import evaluate_single_llm_stakeholder
 
 
 app = typer.Typer(
@@ -2690,6 +2691,114 @@ def qwen_smoke_test(
 
     console.print("\nRaw model output:")
     console.print(result.raw_text)
+
+
+@app.command("llm-evaluate-stakeholder")
+def llm_evaluate_stakeholder(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Allocation strategy used to create the proposal.",
+        ),
+    ] = "proportional",
+    stakeholder: Annotated[
+        str,
+        typer.Option(
+            "--stakeholder",
+            help="Stakeholder name to evaluate.",
+        ),
+    ] = "urban",
+    backend: Annotated[
+        str,
+        typer.Option(
+            "--backend",
+            help="LLM backend: mock or qwen-local.",
+        ),
+    ] = "mock",
+    model: Annotated[
+        str | None,
+        typer.Option(
+            "--model",
+            help="Model name/path. Required for qwen-local.",
+        ),
+    ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save the AgentDecision JSON.",
+        ),
+    ] = None,
+) -> None:
+    """
+    Evaluate one stakeholder allocation using an LLM backend.
+    """
+    if output is not None and output.suffix != ".json":
+        raise typer.BadParameter("Output file must end with .json.")
+
+    try:
+        scenario = load_scenario_config(config)
+
+        strategy_function = get_strategy(strategy)
+        proposal = strategy_function(scenario)
+
+        decision = evaluate_single_llm_stakeholder(
+            scenario=scenario,
+            proposal=proposal,
+            stakeholder_name=stakeholder,
+            backend_name=backend,
+            model_name_or_path=model,
+        )
+    except OptionalDependencyError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from error
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    table = Table(title="LLM Stakeholder Evaluation")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Config", str(config))
+    table.add_row("Strategy", strategy)
+    table.add_row("Stakeholder", stakeholder)
+    table.add_row("Backend", backend)
+    table.add_row("Status", decision.status)
+    table.add_row(
+        "Requested extra water",
+        f"{decision.requested_extra_water:.2f}",
+    )
+    table.add_row(
+        "Willingness to compromise",
+        f"{decision.willingness_to_compromise:.2f}",
+    )
+    table.add_row("Argument", decision.argument)
+
+    console.print(table)
+
+    console.print(f"Status: {decision.status}")
+    console.print(f"Stakeholder: {decision.stakeholder_name}")
+    console.print(f"Backend: {backend}")
+
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            decision.model_dump_json(indent=2),
+            encoding="utf-8",
+        )
+
+        console.print(f"[green]Saved AgentDecision to {output}[/green]")
 
 
 @app.command("version")

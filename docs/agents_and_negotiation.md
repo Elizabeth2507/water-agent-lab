@@ -691,6 +691,21 @@ The stakeholder name is enforced from the simulation state instead of being trus
 Strict parsing remains available by setting `allow_json_extraction=False`.
 
 
+## Single-stakeholder LLM evaluation
+
+WaterAgentLab can evaluate one stakeholder allocation using the same `LLMStakeholderAgent` interface used by the mock agent workflow.
+
+Mock backend:
+
+```bash
+uv run water-agent-lab llm-evaluate-stakeholder \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --stakeholder urban \
+  --backend mock
+```
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

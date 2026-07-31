@@ -613,6 +613,31 @@ uv run water-agent-lab qwen-smoke-test \
 
 The project includes robust JSON extraction for real LLM outputs, so the Qwen smoke test can handle raw JSON, fenced JSON, or JSON surrounded by short explanatory text. The extracted object is still validated against the expected Pydantic schema.
 
+
+### Evaluate one stakeholder with an LLM backend
+
+Mock backend:
+
+```bash
+uv run water-agent-lab llm-evaluate-stakeholder \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --stakeholder urban \
+  --backend mock
+```
+
+Optional local Qwen backend:
+
+```bash
+uv run water-agent-lab llm-evaluate-stakeholder \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --stakeholder urban \
+  --backend qwen-local \
+  --model Qwen/Qwen2.5-1.5B-Instruct
+```
+
+
 ## Design notes
 
 The main branch is kept deterministic because reproducibility matters for this kind of simulation. Before adding LLM agents, it is useful to have a baseline where every run can be tested and compared exactly.
