@@ -604,6 +604,12 @@ Install optional local LLM dependencies:
 uv sync --extra local-llm
 ```
 
+Run a smoke test:
+
+```bash
+uv run water-agent-lab qwen-smoke-test \
+  --model Qwen/Qwen2.5-1.5B-Instruct
+```
 
 ## Design notes
 
