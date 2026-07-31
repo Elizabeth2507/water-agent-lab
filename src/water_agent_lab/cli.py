@@ -86,6 +86,8 @@ from water_agent_lab.negotiation_mode_reporting import (
     generate_negotiation_mode_comparison_report,
 )
 from water_agent_lab.ai_agent_experiment import run_ai_agent_experiment
+from water_agent_lab.qwen_backend import OptionalDependencyError
+from water_agent_lab.qwen_smoke_test import run_qwen_smoke_test
 
 
 app = typer.Typer(
@@ -2631,6 +2633,63 @@ def run_ai_agent_experiment_command(
     console.print("[green]AI-agent experiment completed[/green]")
     console.print(f"Output directory: {output_dir}")
     console.print(f"Summary: {output_dir / 'ai_agent_experiment_summary.md'}")
+
+
+@app.command("qwen-smoke-test")
+def qwen_smoke_test(
+    model: Annotated[
+        str,
+        typer.Option(
+            "--model",
+            help="Local or Hugging Face Qwen model name/path.",
+        ),
+    ] = "Qwen/Qwen2.5-1.5B-Instruct",
+    max_new_tokens: Annotated[
+        int,
+        typer.Option(
+            "--max-new-tokens",
+            help="Maximum number of generated tokens.",
+        ),
+    ] = 256,
+) -> None:
+    """
+    Run a local Qwen smoke test.
+
+    This command is optional and intended for local use only.
+    It requires the local-llm optional dependencies.
+    """
+    try:
+        result = run_qwen_smoke_test(
+            model_name_or_path=model,
+            max_new_tokens=max_new_tokens,
+        )
+    except OptionalDependencyError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from error
+
+    table = Table(title="Qwen Smoke Test")
+
+    table.add_column("Field")
+    table.add_column("Value")
+
+    table.add_row("Model", result.model_name)
+    table.add_row("Backend", result.backend_name)
+    table.add_row("Parsed successfully", str(result.parsed_successfully))
+
+    if result.parsed_decision is not None:
+        table.add_row("Stakeholder", result.parsed_decision.stakeholder_name)
+        table.add_row("Status", result.parsed_decision.status)
+        table.add_row(
+            "Requested extra water", str(result.parsed_decision.requested_extra_water)
+        )
+
+    if result.parse_error is not None:
+        table.add_row("Parse error", result.parse_error)
+
+    console.print(table)
+
+    console.print("\nRaw model output:")
+    console.print(result.raw_text)
 
 
 @app.command("version")

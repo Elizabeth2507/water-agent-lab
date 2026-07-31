@@ -641,6 +641,41 @@ The workflow:
 This command is intended for portfolio demonstrations because it produces all key experiment artifacts from one reproducible command.
 
 
+## Optional local Qwen backend
+
+WaterAgentLab includes an optional `QwenLocalBackend` behind the same `LLMBackend` interface used by the mock backend.
+
+The backend is optional so that tests and CI do not require GPU access or model downloads.
+
+Install local LLM dependencies with:
+
+```bash
+uv sync --extra local-llm
+```
+
+Example future usage:
+
+```bash
+from water_agent_lab.qwen_backend import QwenLocalBackend
+
+backend = QwenLocalBackend(
+    model_name_or_path="Qwen/Qwen2.5-3B-Instruct",
+)
+````
+
+
+## Qwen smoke testing
+
+The `qwen-smoke-test` command checks whether a local Qwen backend can generate a structured stakeholder decision.
+
+Example:
+
+```bash
+uv run water-agent-lab qwen-smoke-test \
+  --model Qwen/Qwen2.5-1.5B-Instruct
+```
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.
@@ -665,3 +700,5 @@ rule-based evaluator
 ```
 
 This keeps the system measurable and reproducible while adding richer interaction.
+
+

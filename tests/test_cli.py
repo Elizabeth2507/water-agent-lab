@@ -4,6 +4,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from water_agent_lab.cli import app
+from water_agent_lab.qwen_backend import OptionalDependencyError
 
 runner = CliRunner()
 
@@ -2149,3 +2150,29 @@ def test_run_ai_agent_experiment_command_rejects_non_positive_runs(
 
     assert result.exit_code != 0
     assert "runs must be greater than 0" in result.output
+
+
+def test_qwen_smoke_test_command_handles_missing_optional_dependencies(
+    monkeypatch,
+) -> None:
+    def fake_run_qwen_smoke_test(*args, **kwargs):
+        raise OptionalDependencyError(
+            "QwenLocalBackend requires optional dependencies."
+        )
+
+    monkeypatch.setattr(
+        "water_agent_lab.cli.run_qwen_smoke_test",
+        fake_run_qwen_smoke_test,
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "qwen-smoke-test",
+            "--model",
+            "Qwen/Qwen2.5-1.5B-Instruct",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "QwenLocalBackend requires optional dependencies" in result.stdout

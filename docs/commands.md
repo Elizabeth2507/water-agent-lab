@@ -652,6 +652,26 @@ uv run water-agent-lab run-ai-agent-experiment \
   --output-dir outputs/ai_agent_experiment
 ```
 
+
+### `qwen-smoke-test`
+
+Run a local Qwen smoke test.
+
+```bash
+uv run water-agent-lab qwen-smoke-test \
+  --model Qwen/Qwen2.5-1.5B-Instruct
+```
+
+This command loads a local Qwen-compatible model, sends a small stakeholder-agent prompt, prints the raw model output, and attempts to parse it as an `AgentDecision`.
+
+Install optional dependencies first:
+
+```bash
+uv sync --extra local-llm
+```
+
+This command is intended for local use only. It is not required for CI.
+
 ---
 
 ## Recommended workflows

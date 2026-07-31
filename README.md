@@ -583,6 +583,28 @@ uv run water-agent-lab compare-negotiation-modes-report \
 ```
 
 
+### Optional local Qwen backend
+
+WaterAgentLab includes an optional local Qwen backend for future real-model experiments.
+
+Install optional dependencies:
+
+```bash
+uv sync --extra local-llm
+```
+
+The default workflow still uses deterministic mock LLM agents, so CI and tests do not require GPU access or model downloads.
+
+
+### Local Qwen smoke test
+
+Install optional local LLM dependencies:
+
+```bash
+uv sync --extra local-llm
+```
+
+
 ## Design notes
 
 The main branch is kept deterministic because reproducibility matters for this kind of simulation. Before adding LLM agents, it is useful to have a baseline where every run can be tested and compared exactly.
