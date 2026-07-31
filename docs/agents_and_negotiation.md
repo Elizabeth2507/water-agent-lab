@@ -724,6 +724,20 @@ allocated_water is close to requested_water
 ```
 
 
+## Configurable-backend LLM negotiation
+
+WaterAgentLab can run full multi-round LLM-style negotiation with a configurable backend.
+
+Mock backend:
+
+```bash
+uv run water-agent-lab llm-negotiate \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --backend mock
+```
+
+
 ## Future LLM-agent extension
 
 In a future version, stakeholder agents could be extended with LLM-based behavior.

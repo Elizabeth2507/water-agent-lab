@@ -2302,3 +2302,115 @@ def test_llm_evaluate_stakeholder_command_with_mock_backend() -> None:
     assert result.exit_code == 0
     assert "Stakeholder: urban" in result.stdout
     assert "Status: rejected" in result.stdout
+
+
+def test_llm_negotiate_command_with_mock_backend() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--backend",
+            "mock",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "LLM Negotiation" in result.stdout
+    assert "Backend: mock" in result.stdout
+    assert "Agreement reached" in result.stdout
+    assert "Mediator action" in result.stdout
+
+
+def test_llm_negotiate_command_saves_transcript(tmp_path) -> None:
+    output_path = tmp_path / "llm_transcript.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--strategy",
+            "proportional",
+            "--backend",
+            "mock",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_path.exists()
+    assert "Saved LLM negotiation transcript" in result.stdout
+
+
+def test_llm_negotiate_command_rejects_invalid_output_suffix(
+    tmp_path,
+) -> None:
+    output_path = tmp_path / "llm_transcript.txt"
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--backend",
+            "mock",
+            "--output",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Output file must end with .json" in result.output
+
+
+def test_llm_negotiate_command_rejects_unknown_backend() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--backend",
+            "unknown",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Unknown LLM backend" in result.output
+
+
+def test_llm_negotiate_command_handles_missing_qwen_dependencies(
+    monkeypatch,
+) -> None:
+    def fake_run_llm_multi_round_negotiation(*args, **kwargs):
+        raise OptionalDependencyError(
+            "QwenLocalBackend requires optional dependencies."
+        )
+
+    monkeypatch.setattr(
+        "water_agent_lab.cli.run_llm_multi_round_negotiation",
+        fake_run_llm_multi_round_negotiation,
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "llm-negotiate",
+            "--config",
+            "configs/drought_mvp.yaml",
+            "--backend",
+            "qwen-local",
+            "--model",
+            "Qwen/Qwen2.5-1.5B-Instruct",
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "QwenLocalBackend requires optional dependencies" in result.stdout

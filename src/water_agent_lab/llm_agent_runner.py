@@ -8,6 +8,7 @@ from water_agent_lab.llm_stakeholder_agent import (
     build_default_agent_profile,
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
+from water_agent_lab.llm_backend_factory import create_llm_backend
 
 
 def build_mock_decision_response_text(
@@ -81,6 +82,65 @@ def run_mock_llm_stakeholder_responses(
             response_text=response_text,
         )
 
+        profile = build_default_agent_profile(stakeholder)
+
+        state = (
+            agent_states.get(stakeholder.name, AgentState()).model_copy()
+            if agent_states is not None
+            else AgentState()
+        )
+
+        agent = LLMStakeholderAgent(
+            profile=profile,
+            backend=backend,
+            state=state,
+            memory=memory,
+        )
+
+        decision = agent.evaluate_allocation(
+            stakeholder=stakeholder,
+            proposal=proposal,
+            round_number=round_number,
+            scenario=scenario,
+        )
+
+        if agent_states is not None:
+            agent_states[stakeholder.name] = agent.state.model_copy()
+
+        decisions.append(decision)
+
+    return decisions
+
+
+def run_llm_stakeholder_responses(
+    scenario: ScenarioConfig,
+    proposal: AllocationProposal,
+    backend_name: str,
+    model_name_or_path: str | None = None,
+    round_number: int = 1,
+    memory: AgentMemory | None = None,
+    agent_states: dict[str, AgentState] | None = None,
+) -> list[AgentDecision]:
+    """
+    Run stakeholder responses using a configurable LLM backend.
+
+    The backend is created once and reused for all stakeholders. This is
+    important for local models such as Qwen because loading the model once per
+    stakeholder would be too slow.
+
+    Supported backends are provided by create_llm_backend():
+    - mock
+    - fixed-mock
+    - qwen-local
+    """
+    backend = create_llm_backend(
+        backend_name=backend_name,
+        model_name_or_path=model_name_or_path,
+    )
+
+    decisions: list[AgentDecision] = []
+
+    for stakeholder in scenario.stakeholders:
         profile = build_default_agent_profile(stakeholder)
 
         state = (

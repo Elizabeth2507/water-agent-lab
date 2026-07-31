@@ -637,6 +637,30 @@ uv run water-agent-lab llm-evaluate-stakeholder \
   --model Qwen/Qwen2.5-1.5B-Instruct
 ```
 
+The default `mock` backend is stakeholder-aware: it reads the stakeholder allocation context from the prompt and returns a deterministic structured decision. This makes it useful for testing agent workflows before using a real local model. The old fixed-response backend is available as `fixed-mock`.
+
+
+### Run full LLM-style negotiation
+
+Mock backend:
+
+```bash
+uv run water-agent-lab llm-negotiate \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --backend mock
+```
+
+Optional local Qwen backend:
+
+```bash
+uv run water-agent-lab llm-negotiate \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --backend qwen-local \
+  --model Qwen/Qwen2.5-1.5B-Instruct
+```
+
 
 ## Design notes
 

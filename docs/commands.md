@@ -699,7 +699,43 @@ uv run water-agent-lab llm-evaluate-stakeholder \
   --backend qwen-local \
   --model Qwen/Qwen2.5-1.5B-Instruct
 ```
+
+
+Available backends:
+
+```text
+mock        stakeholder-aware deterministic mock backend
+fixed-mock  fixed-response mock backend
+qwen-local  optional local Qwen backend
+```
+
+
+## llm-negotiate
+
+Run a multi-round LLM-style negotiation with a configurable backend.
+
+Mock backend:
+
+```bash
+uv run water-agent-lab llm-negotiate \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --backend mock
+```
+
+local Qwen backend:
+
+```bash
+uv run water-agent-lab llm-negotiate \
+  --config configs/drought_mvp.yaml \
+  --strategy proportional \
+  --backend qwen-local \
+  --model Qwen/Qwen2.5-1.5B-Instruct \
+  --output outputs/qwen_negotiation_transcript.json
+```
+
 ---
+
 
 
 ## Recommended workflows

@@ -89,6 +89,9 @@ from water_agent_lab.ai_agent_experiment import run_ai_agent_experiment
 from water_agent_lab.qwen_backend import OptionalDependencyError
 from water_agent_lab.qwen_smoke_test import run_qwen_smoke_test
 from water_agent_lab.llm_single_agent import evaluate_single_llm_stakeholder
+from water_agent_lab.llm_negotiation_runner import (
+    run_llm_multi_round_negotiation,
+)
 
 
 app = typer.Typer(
@@ -2799,6 +2802,126 @@ def llm_evaluate_stakeholder(
         )
 
         console.print(f"[green]Saved AgentDecision to {output}[/green]")
+
+
+@app.command("llm-negotiate")
+def llm_negotiate(
+    config: Annotated[
+        Path,
+        typer.Option(
+            "--config",
+            "-c",
+            help="Path to drought scenario YAML config.",
+        ),
+    ] = Path("configs/drought_mvp.yaml"),
+    strategy: Annotated[
+        str,
+        typer.Option(
+            "--strategy",
+            help="Initial allocation strategy.",
+        ),
+    ] = "proportional",
+    backend: Annotated[
+        str,
+        typer.Option(
+            "--backend",
+            help="LLM backend: mock, fixed-mock, or qwen-local.",
+        ),
+    ] = "mock",
+    model: Annotated[
+        str | None,
+        typer.Option(
+            "--model",
+            help="Model name/path. Required for qwen-local.",
+        ),
+    ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Optional path to save the agent transcript JSON.",
+        ),
+    ] = None,
+) -> None:
+    """
+    Run a multi-round LLM-style negotiation with a configurable backend.
+    """
+    if output is not None and output.suffix != ".json":
+        raise typer.BadParameter("Output file must end with .json.")
+
+    try:
+        transcript = run_llm_multi_round_negotiation(
+            config_path=config,
+            initial_strategy=strategy,
+            backend_name=backend,
+            model_name_or_path=model,
+        )
+    except OptionalDependencyError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from error
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    table = Table(title="LLM Negotiation")
+
+    table.add_column("Round")
+    table.add_column("Strategy")
+    table.add_column("Conflict")
+    table.add_column("Rejected")
+    table.add_column("Requested extra")
+    table.add_column("Mediator action")
+
+    for round_transcript in transcript.rounds:
+        rejected = [
+            decision.stakeholder_name
+            for decision in round_transcript.decisions
+            if decision.status == "rejected"
+        ]
+
+        requested_extra = (
+            round_transcript.counterproposal_summary.total_requested_extra_water
+            if round_transcript.counterproposal_summary is not None
+            else 0.0
+        )
+
+        mediator_action = (
+            round_transcript.mediator_recommendation.action
+            if round_transcript.mediator_recommendation is not None
+            else "none"
+        )
+
+        table.add_row(
+            str(round_transcript.round_number),
+            round_transcript.strategy,
+            f"{round_transcript.result.conflict_score:.3f}",
+            ", ".join(rejected) if rejected else "none",
+            f"{requested_extra:.2f}",
+            mediator_action,
+        )
+
+    console.print(table)
+
+    for round_transcript in transcript.rounds:
+        if round_transcript.mediator_recommendation is not None:
+            console.print(
+                "Mediator action "
+                f"round {round_transcript.round_number}: "
+                f"{round_transcript.mediator_recommendation.action}"
+            )
+
+    console.print(f"Backend: {transcript.backend_name}")
+    console.print(f"Model: {transcript.model_name}")
+    console.print(f"Agreement reached: {transcript.agreement_reached}")
+    console.print(f"Rounds used: {transcript.rounds_used}")
+
+    if output is not None:
+        save_agent_transcript_json(
+            transcript=transcript,
+            output_path=output,
+        )
+
+        console.print(f"[green]Saved LLM negotiation transcript to {output}[/green]")
 
 
 @app.command("version")
