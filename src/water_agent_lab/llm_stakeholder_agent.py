@@ -9,6 +9,7 @@ from water_agent_lab.llm_prompts import (
     build_stakeholder_user_prompt,
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
+from water_agent_lab.agent_state_manager import update_agent_state_from_decision
 
 
 def build_default_agent_profile(stakeholder: StakeholderConfig) -> AgentProfile:
@@ -85,6 +86,23 @@ class LLMStakeholderAgent:
 
         return decision
 
+    def evaluate_proposal(
+        self,
+        scenario: ScenarioConfig,
+        stakeholder: StakeholderConfig,
+        proposal: AllocationProposal,
+        round_number: int = 1,
+    ) -> AgentDecision:
+        """
+        Compatibility wrapper for older code that calls evaluate_proposal().
+        """
+        return self.evaluate_allocation(
+            stakeholder=stakeholder,
+            proposal=proposal,
+            round_number=round_number,
+            scenario=scenario,
+        )
+
     def _build_request(
         self,
         stakeholder: StakeholderConfig,
@@ -120,33 +138,42 @@ class LLMStakeholderAgent:
         """
         Update lightweight internal state after a stakeholder decision.
         """
-        self.state.last_status = decision.status
+        self.state = update_agent_state_from_decision(
+            state=self.state,
+            decision=decision,
+        )
 
-        if decision.status == "rejected":
-            self.state.frustration = min(
-                1.0,
-                self.state.frustration + 0.2,
-            )
-            self.state.trust_in_mediator = max(
-                0.0,
-                self.state.trust_in_mediator - 0.1,
-            )
+    # def _update_state(self, decision: AgentDecision) -> None:
+    #     """
+    #     Update lightweight internal state after a stakeholder decision.
+    #     """
+    #     self.state.last_status = decision.status
 
-        elif decision.status == "concerned":
-            self.state.frustration = min(
-                1.0,
-                self.state.frustration + 0.1,
-            )
+    #     if decision.status == "rejected":
+    #         self.state.frustration = min(
+    #             1.0,
+    #             self.state.frustration + 0.2,
+    #         )
+    #         self.state.trust_in_mediator = max(
+    #             0.0,
+    #             self.state.trust_in_mediator - 0.1,
+    #         )
 
-        elif decision.status == "accepted":
-            self.state.frustration = max(
-                0.0,
-                self.state.frustration - 0.1,
-            )
-            self.state.trust_in_mediator = min(
-                1.0,
-                self.state.trust_in_mediator + 0.1,
-            )
+    #     elif decision.status == "concerned":
+    #         self.state.frustration = min(
+    #             1.0,
+    #             self.state.frustration + 0.1,
+    #         )
+
+    #     elif decision.status == "accepted":
+    #         self.state.frustration = max(
+    #             0.0,
+    #             self.state.frustration - 0.1,
+    #         )
+    #         self.state.trust_in_mediator = min(
+    #             1.0,
+    #             self.state.trust_in_mediator + 0.1,
+    #         )
 
     def _record_decision_in_memory(
         self,
@@ -157,6 +184,18 @@ class LLMStakeholderAgent:
         Record the decision in optional memory if the memory object supports it.
         """
         if self.memory is None:
+            return
+
+        add_method = getattr(self.memory, "add", None)
+
+        if callable(add_method):
+            add_method(
+                round_number=round_number,
+                stakeholder_name=decision.stakeholder_name,
+                event_type=_memory_event_type_from_decision(decision),
+                content=decision.argument,
+                importance=decision.willingness_to_compromise,
+            )
             return
 
         payload = {
@@ -260,6 +299,19 @@ def _get_memory_for_stakeholder(
         return None
 
     return memories.get(stakeholder.name)
+
+
+def _memory_event_type_from_decision(decision: AgentDecision) -> str:
+    """
+    Convert an AgentDecision status into a valid AgentMemory event type.
+    """
+    if decision.status == "rejected":
+        return "rejection"
+
+    if decision.status == "accepted":
+        return "agreement"
+
+    return "decision"
 
 
 def decisions_to_rows(

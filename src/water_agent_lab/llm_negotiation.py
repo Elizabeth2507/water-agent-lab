@@ -8,7 +8,6 @@ from water_agent_lab.agent_transcript import (
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.evaluator import evaluate_proposal
 from water_agent_lab.llm_agent_runner import run_mock_llm_stakeholder_responses
-from water_agent_lab.negotiation import choose_revision_strategy
 from water_agent_lab.strategies import get_strategy
 from water_agent_lab.agent_memory import AgentMemory
 from water_agent_lab.agent_state_manager import initialize_agent_states

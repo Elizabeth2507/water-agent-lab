@@ -522,6 +522,9 @@ uv run water-agent-lab llm-negotiate-mock \
 
 This command uses mock LLM stakeholder agents and stores round-by-round decisions, messages, proposals, and evaluation results.
 
+The command also reports average frustration and trust across stakeholder agents.
+
+The command reports stakeholder rejection, average agent state, and mediator action for each round.
 
 ### `summarize-agent-memory`
 
