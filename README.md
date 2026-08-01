@@ -660,6 +660,10 @@ uv run water-agent-lab llm-negotiate \
   --backend qwen-local \
   --model Qwen/Qwen2.5-1.5B-Instruct
 ```
+This command uses the same agent interface for mock and real-model backends.
+
+
+LLM decisions are not trusted blindly. After parsing, each `AgentDecision` is checked against the stakeholder's allocation constraints. For example, if a real model returns `accepted` while the allocation is below the stakeholder's `minimum_acceptable_water`, the decision is repaired before it reaches the mediator. This was added after local Qwen testing revealed schema-valid but constraint-inconsistent outputs.
 
 
 ## Design notes

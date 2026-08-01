@@ -10,6 +10,10 @@ from water_agent_lab.llm_prompts import (
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
 from water_agent_lab.agent_state_manager import update_agent_state_from_decision
+from water_agent_lab.llm_decision_validation import (
+    AgentDecisionValidationResult,
+    validate_or_repair_agent_decision,
+)
 
 
 def build_default_agent_profile(stakeholder: StakeholderConfig) -> AgentProfile:
@@ -53,6 +57,7 @@ class LLMStakeholderAgent:
         self.backend = backend
         self.state = state or AgentState()
         self.memory = memory
+        self.last_validation_result: AgentDecisionValidationResult | None = None
 
     def evaluate_allocation(
         self,
@@ -74,9 +79,18 @@ class LLMStakeholderAgent:
         generation = self.backend.generate(request)
 
         decision = parse_agent_decision(
-            generation.text,
-            stakeholder.name,
+            text=generation.text,
+            stakeholder_name=stakeholder.name,
         )
+
+        validation_result = validate_or_repair_agent_decision(
+            decision=decision,
+            stakeholder=stakeholder,
+            proposal=proposal,
+        )
+
+        self.last_validation_result = validation_result
+        decision = validation_result.decision
 
         self._update_state(decision)
         self._record_decision_in_memory(

@@ -737,6 +737,30 @@ uv run water-agent-lab llm-negotiate \
   --backend mock
 ```
 
+## LLM decision constraint validation
+
+Real LLM backends can return schema-valid decisions that are still inconsistent with the scenario.
+
+During local Qwen testing, the model returned `accepted` decisions for stakeholders whose proposed allocation was below their declared `minimum_acceptable_water`. The JSON was valid and matched the `AgentDecision` schema, but it violated the simulation constraints.
+
+WaterAgentLab therefore validates and repairs LLM decisions before they are used by the mediator.
+
+The validation layer applies deterministic rules:
+
+```text
+allocated_water < minimum_acceptable_water
+→ status is repaired to rejected
+
+allocated_water is above minimum but far below requested_water
+→ accepted is repaired to concerned
+
+accepted decisions
+→ requested_extra_water is repaired to 0.0
+```
+
+This prevents the mediator from accepting a proposal only because an LLM produced a plausible but constraint-inconsistent response
+
+
 
 ## Future LLM-agent extension
 

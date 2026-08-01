@@ -304,3 +304,64 @@ def test_llm_stakeholder_agent_includes_memory_in_prompt() -> None:
     assert decision.status == "concerned"
     assert len(backend.requests) == 1
     assert "Agriculture rejected the first proposal" in backend.requests[0].user_prompt
+
+
+class ConstraintViolatingBackend:
+    def __init__(self) -> None:
+        self.requests = []
+
+    def generate(self, request):
+        self.requests.append(request)
+
+        return LLMGenerationResponse(
+            text="""
+{
+  "stakeholder_name": "urban",
+  "status": "accepted",
+  "argument": "The allocation respects the minimum acceptable water needs.",
+  "requested_extra_water": 0.0,
+  "willingness_to_compromise": 0.9
+}
+""",
+            model_name="constraint-violating-backend",
+            backend_name="constraint-violating-backend",
+        )
+
+
+def test_llm_stakeholder_agent_repairs_constraint_violating_decision() -> None:
+    stakeholder = StakeholderConfig(
+        name="urban",
+        requested_water=35.0,
+        minimum_acceptable_water=28.0,
+        priority=0.9,
+    )
+
+    proposal = AllocationProposal(
+        allocations={
+            "urban": 26.923076923076923,
+        }
+    )
+
+    profile = AgentProfile(
+        name="urban",
+        role="Represents urban water users",
+    )
+
+    agent = LLMStakeholderAgent(
+        profile=profile,
+        backend=ConstraintViolatingBackend(),
+    )
+
+    decision = agent.evaluate_allocation(
+        stakeholder=stakeholder,
+        proposal=proposal,
+    )
+
+    assert decision.stakeholder_name == "urban"
+    assert decision.status == "rejected"
+    assert decision.requested_extra_water == pytest.approx(
+        28.0 - 26.923076923076923
+    )
+
+    assert agent.last_validation_result is not None
+    assert agent.last_validation_result.was_repaired is True
