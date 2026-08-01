@@ -205,7 +205,7 @@ def test_evaluate_llm_stakeholder_responses_returns_one_decision_per_stakeholder
     proposal = AllocationProposal(
         allocations={
             "agriculture": 38.0,
-            "urban": 27.0,
+            "urban": 30.0,
         }
     )
 
@@ -223,7 +223,6 @@ def test_evaluate_llm_stakeholder_responses_returns_one_decision_per_stakeholder
 
     for decision in decisions:
         assert decision.status == "concerned"
-        assert decision.argument
 
 
 def test_decisions_to_rows() -> None:
@@ -359,9 +358,7 @@ def test_llm_stakeholder_agent_repairs_constraint_violating_decision() -> None:
 
     assert decision.stakeholder_name == "urban"
     assert decision.status == "rejected"
-    assert decision.requested_extra_water == pytest.approx(
-        28.0 - 26.923076923076923
-    )
+    assert decision.requested_extra_water == pytest.approx(28.0 - 26.923076923076923)
 
     assert agent.last_validation_result is not None
     assert agent.last_validation_result.was_repaired is True

@@ -155,14 +155,7 @@ def test_repairs_accepted_decision_with_extra_water_request() -> None:
     assert result.decision.requested_extra_water == 0.0
 
 
-def test_repairs_negative_requested_extra_water() -> None:
-    stakeholder = make_urban_stakeholder()
-    proposal = AllocationProposal(
-        allocations={
-            "urban": 33.0,
-        }
-    )
-
+def test_rejects_negative_requested_extra_water() -> None:
     with pytest.raises(ValueError):
         AgentDecision(
             stakeholder_name="urban",

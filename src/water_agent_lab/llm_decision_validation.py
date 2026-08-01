@@ -47,9 +47,7 @@ def validate_or_repair_agent_decision(
 
     if decision.stakeholder_name != stakeholder.name:
         repaired_data["stakeholder_name"] = stakeholder.name
-        repairs.append(
-            "Repaired stakeholder_name to match the evaluated stakeholder."
-        )
+        repairs.append("Repaired stakeholder_name to match the evaluated stakeholder.")
 
     if allocated_water + FLOAT_TOLERANCE < stakeholder.minimum_acceptable_water:
         minimum_shortfall = stakeholder.minimum_acceptable_water - allocated_water
@@ -87,9 +85,10 @@ def validate_or_repair_agent_decision(
                 "water shortfall."
             )
 
-    if repaired_data["status"] == "accepted" and repaired_data[
-        "requested_extra_water"
-    ] != 0.0:
+    if (
+        repaired_data["status"] == "accepted"
+        and repaired_data["requested_extra_water"] != 0.0
+    ):
         repaired_data["requested_extra_water"] = 0.0
         repairs.append(
             "Repaired requested_extra_water to 0.0 because accepted decisions "
