@@ -41,6 +41,7 @@ def test_repairs_accepted_decision_below_minimum_to_rejected() -> None:
     )
 
     assert result.was_repaired is True
+    assert result.original_decision.status == "accepted"
     assert result.decision.status == "rejected"
     assert result.decision.requested_extra_water == pytest.approx(
         28.0 - 26.923076923076923

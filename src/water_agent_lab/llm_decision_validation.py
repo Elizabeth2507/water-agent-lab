@@ -14,6 +14,7 @@ class AgentDecisionValidationResult(BaseModel):
     constraints.
     """
 
+    original_decision: AgentDecision
     decision: AgentDecision
     was_repaired: bool = False
     repairs: list[str] = Field(default_factory=list)
@@ -102,6 +103,7 @@ def validate_or_repair_agent_decision(
     repaired_decision = AgentDecision.model_validate(repaired_data)
 
     return AgentDecisionValidationResult(
+        original_decision=decision,
         decision=repaired_decision,
         was_repaired=bool(repairs),
         repairs=repairs,

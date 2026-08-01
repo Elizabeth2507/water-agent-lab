@@ -3,17 +3,20 @@ from pathlib import Path
 from water_agent_lab.agent_memory import AgentMemory
 from water_agent_lab.agent_message_builder import build_agent_messages_from_decisions
 from water_agent_lab.agent_state_manager import initialize_agent_states
-from water_agent_lab.agent_transcript import (
-    AgentNegotiationTranscript,
-    AgentRoundTranscript,
-)
 from water_agent_lab.config import load_scenario_config
 from water_agent_lab.counterproposals import (
     build_counterproposal_adjusted_allocation,
     summarize_counterproposals,
 )
 from water_agent_lab.evaluator import evaluate_proposal
-from water_agent_lab.llm_agent_runner import run_llm_stakeholder_responses
+from water_agent_lab.agent_transcript import (
+    AgentDecisionValidationTranscript,
+    AgentNegotiationTranscript,
+    AgentRoundTranscript,
+)
+from water_agent_lab.llm_agent_runner import (
+    run_llm_stakeholder_responses_with_validation,
+)
 from water_agent_lab.mediator import RuleBasedMediatorAgent
 from water_agent_lab.negotiation import choose_revision_strategy
 from water_agent_lab.strategies import get_strategy
@@ -52,7 +55,7 @@ def run_llm_multi_round_negotiation(
 
         result = evaluate_proposal(scenario, proposal)
 
-        decisions = run_llm_stakeholder_responses(
+        response_batch = run_llm_stakeholder_responses_with_validation(
             scenario=scenario,
             proposal=proposal,
             backend_name=backend_name,
@@ -61,6 +64,24 @@ def run_llm_multi_round_negotiation(
             memory=memory,
             agent_states=agent_states,
         )
+
+        decisions = response_batch.decisions
+        decision_validation_results = [
+            AgentDecisionValidationTranscript(
+                stakeholder_name=validation_result.decision.stakeholder_name,
+                was_repaired=validation_result.was_repaired,
+                original_status=validation_result.original_decision.status,
+                repaired_status=validation_result.decision.status,
+                original_requested_extra_water=(
+                    validation_result.original_decision.requested_extra_water
+                ),
+                repaired_requested_extra_water=(
+                    validation_result.decision.requested_extra_water
+                ),
+                repairs=validation_result.repairs,
+            )
+            for validation_result in response_batch.validation_results
+        ]
 
         messages = build_agent_messages_from_decisions(
             decisions=decisions,
@@ -120,6 +141,7 @@ def run_llm_multi_round_negotiation(
                 proposal=proposal,
                 decisions=decisions,
                 messages=messages,
+                decision_validation_results=decision_validation_results,
                 result=result,
                 memory_summary=memory_summary,
                 agent_states={

@@ -761,6 +761,16 @@ accepted decisions
 This prevents the mediator from accepting a proposal only because an LLM produced a plausible but constraint-inconsistent response
 
 
+## Validation metadata in transcripts
+
+Negotiation transcripts include explicit validation metadata for each LLM stakeholder decision.
+
+Each round stores:
+
+```text
+decision_validation_results
+```
+
 
 ## Future LLM-agent extension
 

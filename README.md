@@ -665,6 +665,7 @@ This command uses the same agent interface for mock and real-model backends.
 
 LLM decisions are not trusted blindly. After parsing, each `AgentDecision` is checked against the stakeholder's allocation constraints. For example, if a real model returns `accepted` while the allocation is below the stakeholder's `minimum_acceptable_water`, the decision is repaired before it reaches the mediator. This was added after local Qwen testing revealed schema-valid but constraint-inconsistent outputs.
 
+Saved negotiation transcripts include validation metadata for each LLM stakeholder decision. This records whether a decision was repaired, the original and repaired status, the original and repaired requested extra water, and the repair reasons. This makes LLM-agent behavior auditable instead of treating model outputs as trusted black boxes.
 
 ## Design notes
 

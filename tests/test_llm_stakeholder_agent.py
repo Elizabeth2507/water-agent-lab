@@ -362,3 +362,5 @@ def test_llm_stakeholder_agent_repairs_constraint_violating_decision() -> None:
 
     assert agent.last_validation_result is not None
     assert agent.last_validation_result.was_repaired is True
+    assert agent.last_validation_result.original_decision.status == "accepted"
+    assert agent.last_validation_result.decision.status == "rejected"

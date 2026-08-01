@@ -2347,6 +2347,12 @@ def test_llm_negotiate_command_saves_transcript(tmp_path) -> None:
     assert output_path.exists()
     assert "Saved LLM negotiation transcript" in result.stdout
 
+    transcript_data = json.loads(output_path.read_text(encoding="utf-8"))
+    first_round = transcript_data["rounds"][0]
+
+    assert "decision_validation_results" in first_round
+    assert len(first_round["decision_validation_results"]) == 4
+
 
 def test_llm_negotiate_command_rejects_invalid_output_suffix(
     tmp_path,

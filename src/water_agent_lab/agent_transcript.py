@@ -18,6 +18,9 @@ class AgentRoundTranscript(BaseModel):
     strategy: str
     proposal: AllocationProposal
     decisions: list[AgentDecision]
+    decision_validation_results: list[AgentDecisionValidationTranscript] = Field(
+        default_factory=list
+    )
     messages: list[AgentMessage] = Field(default_factory=list)
     result: SimulationResult
     memory_summary: str | None = None
@@ -47,6 +50,16 @@ class AgentNegotiationTranscript(BaseModel):
     backend_name: str
     model_name: str
     rounds: list[AgentRoundTranscript]
+
+
+class AgentDecisionValidationTranscript(BaseModel):
+    stakeholder_name: str
+    was_repaired: bool
+    original_status: str
+    repaired_status: str
+    original_requested_extra_water: float
+    repaired_requested_extra_water: float
+    repairs: list[str] = Field(default_factory=list)
 
 
 def save_agent_transcript_json(

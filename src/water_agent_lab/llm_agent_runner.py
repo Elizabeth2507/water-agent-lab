@@ -1,4 +1,5 @@
 import json
+from pydantic import BaseModel, Field
 
 from water_agent_lab.agent_memory import AgentMemory
 from water_agent_lab.agent_models import AgentDecision, AgentState
@@ -9,6 +10,16 @@ from water_agent_lab.llm_stakeholder_agent import (
 )
 from water_agent_lab.models import AllocationProposal, ScenarioConfig, StakeholderConfig
 from water_agent_lab.llm_backend_factory import create_llm_backend
+from water_agent_lab.llm_decision_validation import (
+    AgentDecisionValidationResult,
+)
+
+
+class LLMStakeholderResponseBatch(BaseModel):
+    decisions: list[AgentDecision]
+    validation_results: list[AgentDecisionValidationResult] = Field(
+        default_factory=list
+    )
 
 
 def build_mock_decision_response_text(
@@ -178,3 +189,61 @@ def llm_decisions_to_rows(
     Convert LLM stakeholder decisions into simple serializable rows.
     """
     return [decision.model_dump() for decision in decisions]
+
+
+def run_llm_stakeholder_responses_with_validation(
+    scenario: ScenarioConfig,
+    proposal: AllocationProposal,
+    backend_name: str,
+    model_name_or_path: str | None = None,
+    round_number: int = 1,
+    memory: AgentMemory | None = None,
+    agent_states: dict[str, AgentState] | None = None,
+) -> LLMStakeholderResponseBatch:
+    """
+    Run stakeholder responses using a configurable LLM backend and return both
+    repaired decisions and validation metadata.
+    """
+    backend = create_llm_backend(
+        backend_name=backend_name,
+        model_name_or_path=model_name_or_path,
+    )
+
+    decisions: list[AgentDecision] = []
+    validation_results: list[AgentDecisionValidationResult] = []
+
+    for stakeholder in scenario.stakeholders:
+        profile = build_default_agent_profile(stakeholder)
+
+        state = (
+            agent_states.get(stakeholder.name, AgentState()).model_copy()
+            if agent_states is not None
+            else AgentState()
+        )
+
+        agent = LLMStakeholderAgent(
+            profile=profile,
+            backend=backend,
+            state=state,
+            memory=memory,
+        )
+
+        decision = agent.evaluate_allocation(
+            stakeholder=stakeholder,
+            proposal=proposal,
+            round_number=round_number,
+            scenario=scenario,
+        )
+
+        if agent.last_validation_result is not None:
+            validation_results.append(agent.last_validation_result)
+
+        if agent_states is not None:
+            agent_states[stakeholder.name] = agent.state.model_copy()
+
+        decisions.append(decision)
+
+    return LLMStakeholderResponseBatch(
+        decisions=decisions,
+        validation_results=validation_results,
+    )

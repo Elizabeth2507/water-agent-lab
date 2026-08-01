@@ -45,3 +45,32 @@ def test_run_llm_multi_round_negotiation_rejects_unknown_backend() -> None:
             initial_strategy="proportional",
             backend_name="unknown",
         )
+
+
+def test_run_llm_multi_round_negotiation_stores_validation_results() -> None:
+    transcript = run_llm_multi_round_negotiation(
+        config_path="configs/drought_mvp.yaml",
+        initial_strategy="proportional",
+        backend_name="mock",
+    )
+
+    first_round = transcript.rounds[0]
+
+    assert first_round.decision_validation_results
+    assert {
+        validation_result.stakeholder_name
+        for validation_result in first_round.decision_validation_results
+    } == {
+        "agriculture",
+        "urban",
+        "industry",
+        "ecosystem",
+    }
+
+    repaired_results = [
+        validation_result
+        for validation_result in first_round.decision_validation_results
+        if validation_result.was_repaired
+    ]
+
+    assert repaired_results == []
